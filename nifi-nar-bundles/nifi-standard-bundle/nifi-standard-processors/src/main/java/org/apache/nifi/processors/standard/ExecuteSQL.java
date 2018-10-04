@@ -55,6 +55,7 @@ import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
+import org.apache.nifi.processors.standard.util.AvroUtil.CodecType;
 import org.apache.nifi.processors.standard.util.JdbcCommon;
 import org.apache.nifi.util.StopWatch;
 
@@ -187,6 +188,16 @@ public class ExecuteSQL extends AbstractProcessor {
             .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
             .build();
 
+    public static final PropertyDescriptor COMPRESSION_FORMAT = new PropertyDescriptor.Builder()
+            .name("compression-format")
+            .displayName("Compression Format")
+            .description("Compression type to use when writing Avro files. Default is None.")
+            .allowableValues(CodecType.values())
+            .defaultValue(CodecType.NONE.toString())
+            .expressionLanguageSupported(ExpressionLanguageScope.NONE)
+            .required(true)
+            .build();
+
     private final List<PropertyDescriptor> propDescriptors;
 
     public ExecuteSQL() {
@@ -205,6 +216,7 @@ public class ExecuteSQL extends AbstractProcessor {
         pds.add(DEFAULT_SCALE);
         pds.add(MAX_ROWS_PER_FLOW_FILE);
         pds.add(OUTPUT_BATCH_SIZE);
+        pds.add(COMPRESSION_FORMAT);
         propDescriptors = Collections.unmodifiableList(pds);
     }
 
@@ -255,6 +267,8 @@ public class ExecuteSQL extends AbstractProcessor {
         final int outputBatchSize = outputBatchSizeField == null ? 0 : outputBatchSizeField;
         final Integer defaultPrecision = context.getProperty(DEFAULT_PRECISION).evaluateAttributeExpressions(fileToProcess).asInteger();
         final Integer defaultScale = context.getProperty(DEFAULT_SCALE).evaluateAttributeExpressions(fileToProcess).asInteger();
+        final String codec = context.getProperty(COMPRESSION_FORMAT).getValue();
+
         final String selectQuery;
         if (context.getProperty(SQL_SELECT_QUERY).isSet()) {
             selectQuery = context.getProperty(SQL_SELECT_QUERY).evaluateAttributeExpressions(fileToProcess).getValue();
@@ -300,6 +314,7 @@ public class ExecuteSQL extends AbstractProcessor {
                                 .defaultPrecision(defaultPrecision)
                                 .defaultScale(defaultScale)
                                 .maxRows(maxRowsPerFlowFile)
+                                .codecFactory(codec)
                                 .build();
 
                         do {
@@ -313,49 +328,59 @@ public class ExecuteSQL extends AbstractProcessor {
                                 resultSetFF = session.putAllAttributes(resultSetFF, fileToProcess.getAttributes());
                             }
 
-                            resultSetFF = session.write(resultSetFF, out -> {
-                                try {
-                                    nrOfRows.set(JdbcCommon.convertToAvroStream(resultSet, out, options, null));
-                                } catch (SQLException e) {
+                            try {
+                                resultSetFF = session.write(resultSetFF, out -> {
+                                    try {
+                                        nrOfRows.set(JdbcCommon.convertToAvroStream(resultSet, out, options, null));
+                                    } catch (SQLException e) {
+                                        throw new ProcessException(e);
+                                    }
+                                });
+
+                                long fetchTimeElapsed = fetchTime.getElapsed(TimeUnit.MILLISECONDS);
+
+                                // set attribute how many rows were selected
+                                resultSetFF = session.putAttribute(resultSetFF, RESULT_ROW_COUNT, String.valueOf(nrOfRows.get()));
+                                resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_DURATION, String.valueOf(executionTimeElapsed + fetchTimeElapsed));
+                                resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_EXECUTION_TIME, String.valueOf(executionTimeElapsed));
+                                resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_FETCH_TIME, String.valueOf(fetchTimeElapsed));
+                                resultSetFF = session.putAttribute(resultSetFF, CoreAttributes.MIME_TYPE.key(), JdbcCommon.MIME_TYPE_AVRO_BINARY);
+                                resultSetFF = session.putAttribute(resultSetFF, RESULTSET_INDEX, String.valueOf(resultCount));
+
+                                // if fragmented ResultSet, determine if we should keep this fragment; set fragment attributes
+                                if (maxRowsPerFlowFile > 0) {
+                                    // if row count is zero and this is not the first fragment, drop it instead of committing it.
+                                    if (nrOfRows.get() == 0 && fragmentIndex > 0) {
+                                        session.remove(resultSetFF);
+                                        break;
+                                    }
+
+                                    resultSetFF = session.putAttribute(resultSetFF, FRAGMENT_ID, fragmentId);
+                                    resultSetFF = session.putAttribute(resultSetFF, FRAGMENT_INDEX, String.valueOf(fragmentIndex));
+                                }
+
+                                logger.info("{} contains {} Avro records; transferring to 'success'",
+                                        new Object[]{resultSetFF, nrOfRows.get()});
+                                session.getProvenanceReporter().modifyContent(resultSetFF, "Retrieved " + nrOfRows.get() + " rows", executionTimeElapsed + fetchTimeElapsed);
+                                resultSetFlowFiles.add(resultSetFF);
+
+                                // If we've reached the batch size, send out the flow files
+                                if (outputBatchSize > 0 && resultSetFlowFiles.size() >= outputBatchSize) {
+                                    session.transfer(resultSetFlowFiles, REL_SUCCESS);
+                                    session.commit();
+                                    resultSetFlowFiles.clear();
+                                }
+
+                                fragmentIndex++;
+                            } catch (Exception e) {
+                                // Remove the result set flow file and propagate the exception
+                                session.remove(resultSetFF);
+                                if (e instanceof ProcessException) {
+                                    throw (ProcessException) e;
+                                } else {
                                     throw new ProcessException(e);
                                 }
-                            });
-
-                            long fetchTimeElapsed = fetchTime.getElapsed(TimeUnit.MILLISECONDS);
-
-                            // set attribute how many rows were selected
-                            resultSetFF = session.putAttribute(resultSetFF, RESULT_ROW_COUNT, String.valueOf(nrOfRows.get()));
-                            resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_DURATION, String.valueOf(executionTimeElapsed + fetchTimeElapsed));
-                            resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_EXECUTION_TIME, String.valueOf(executionTimeElapsed));
-                            resultSetFF = session.putAttribute(resultSetFF, RESULT_QUERY_FETCH_TIME, String.valueOf(fetchTimeElapsed));
-                            resultSetFF = session.putAttribute(resultSetFF, CoreAttributes.MIME_TYPE.key(), JdbcCommon.MIME_TYPE_AVRO_BINARY);
-                            resultSetFF = session.putAttribute(resultSetFF, RESULTSET_INDEX, String.valueOf(resultCount));
-
-                            // if fragmented ResultSet, determine if we should keep this fragment; set fragment attributes
-                            if(maxRowsPerFlowFile > 0) {
-                                // if row count is zero and this is not the first fragment, drop it instead of committing it.
-                                if(nrOfRows.get() == 0 && fragmentIndex > 0) {
-                                    session.remove(resultSetFF);
-                                    break;
-                                }
-
-                                resultSetFF = session.putAttribute(resultSetFF, FRAGMENT_ID, fragmentId);
-                                resultSetFF = session.putAttribute(resultSetFF, FRAGMENT_INDEX, String.valueOf(fragmentIndex));
                             }
-
-                            logger.info("{} contains {} Avro records; transferring to 'success'",
-                                    new Object[]{resultSetFF, nrOfRows.get()});
-                            session.getProvenanceReporter().modifyContent(resultSetFF, "Retrieved " + nrOfRows.get() + " rows", executionTimeElapsed + fetchTimeElapsed);
-                            resultSetFlowFiles.add(resultSetFF);
-
-                            // If we've reached the batch size, send out the flow files
-                            if (outputBatchSize > 0 && resultSetFlowFiles.size() >= outputBatchSize) {
-                                session.transfer(resultSetFlowFiles, REL_SUCCESS);
-                                session.commit();
-                                resultSetFlowFiles.clear();
-                            }
-
-                            fragmentIndex++;
                         } while (maxRowsPerFlowFile > 0 && nrOfRows.get() == maxRowsPerFlowFile);
 
                         // If we are splitting results but not outputting batches, set count on all FlowFiles

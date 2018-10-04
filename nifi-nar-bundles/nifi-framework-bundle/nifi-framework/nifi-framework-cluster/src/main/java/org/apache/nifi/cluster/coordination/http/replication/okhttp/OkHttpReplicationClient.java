@@ -94,10 +94,33 @@ public class OkHttpReplicationClient implements HttpReplicationClient {
     @Override
     public PreparedRequest prepareRequest(final String method, final Map<String, String> headers, final Object entity) {
         final boolean gzip = isUseGzip(headers);
+        checkContentLengthHeader(method, headers);
         final RequestBody requestBody = createRequestBody(headers, entity, gzip);
 
         final Map<String, String> updatedHeaders = gzip ? updateHeadersForGzip(headers) : headers;
         return new OkHttpPreparedRequest(method, updatedHeaders, entity, requestBody);
+    }
+
+    /**
+     * Checks the content length header on DELETE requests to ensure it is set to '0', avoiding request timeouts on replicated requests.
+     * @param method the HTTP method of the request
+     * @param headers the header keys and values
+     */
+    private void checkContentLengthHeader(String method, Map<String, String> headers) {
+        // Only applies to DELETE requests
+        if (HttpMethod.DELETE.equalsIgnoreCase(method)) {
+            // Find the Content-Length header if present
+            final String CONTENT_LENGTH_HEADER_KEY = "Content-Length";
+            Map.Entry<String, String> contentLengthEntry = headers.entrySet().stream().filter(entry -> entry.getKey().equalsIgnoreCase(CONTENT_LENGTH_HEADER_KEY)).findFirst().orElse(null);
+            // If no CL header, do nothing
+            if (contentLengthEntry != null) {
+                // If the provided CL value is non-zero, override it
+                if (contentLengthEntry.getValue() != null && !contentLengthEntry.getValue().equalsIgnoreCase("0")) {
+                    logger.warn("This is a DELETE request; the provided Content-Length was {}; setting Content-Length to 0", contentLengthEntry.getValue());
+                    headers.put(CONTENT_LENGTH_HEADER_KEY, "0");
+                }
+            }
+        }
     }
 
     @Override
@@ -139,7 +162,7 @@ public class OkHttpReplicationClient implements HttpReplicationClient {
         final String contentEncoding = callResponse.header("Content-Encoding");
         if (gzipEncodings.contains(contentEncoding)) {
             try (final InputStream gzipIn = new GZIPInputStream(new ByteArrayInputStream(rawBytes));
-                final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+                 final ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
                 StreamUtils.copy(gzipIn, baos);
                 return baos.toByteArray();
@@ -182,7 +205,7 @@ public class OkHttpReplicationClient implements HttpReplicationClient {
 
     @SuppressWarnings("unchecked")
     private HttpUrl buildUrl(final OkHttpPreparedRequest request, final String uri) {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(uri.toString()).newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(uri).newBuilder();
         switch (request.getMethod().toUpperCase()) {
             case HttpMethod.DELETE:
             case HttpMethod.HEAD:
@@ -225,7 +248,7 @@ public class OkHttpReplicationClient implements HttpReplicationClient {
 
     private byte[] serializeEntity(final Object entity, final String contentType, final boolean gzip) {
         try (final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            final OutputStream out = gzip ? new GZIPOutputStream(baos, 1) : baos) {
+             final OutputStream out = gzip ? new GZIPOutputStream(baos, 1) : baos) {
 
             getSerializer(contentType).serialize(entity, out);
             out.close();
@@ -268,10 +291,10 @@ public class OkHttpReplicationClient implements HttpReplicationClient {
         } else {
             final String[] acceptEncodingTokens = rawAcceptEncoding.split(",");
             return Stream.of(acceptEncodingTokens)
-                .map(String::trim)
-                .filter(enc -> StringUtils.isNotEmpty(enc))
-                .map(String::toLowerCase)
-                .anyMatch(gzipEncodings::contains);
+                    .map(String::trim)
+                    .filter(StringUtils::isNotEmpty)
+                    .map(String::toLowerCase)
+                    .anyMatch(gzipEncodings::contains);
         }
     }
 

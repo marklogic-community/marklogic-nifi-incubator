@@ -21,7 +21,6 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.reporting.InitializationException;
 import org.apache.nifi.util.TestRunner;
 import org.apache.nifi.util.TestRunners;
-import org.h2.jdbc.JdbcSQLException;
 import org.h2.tools.Server;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -68,6 +67,30 @@ public class DBCPServiceTest {
         final Map<String, String> properties = new HashMap<String, String>();
         runner.addControllerService("test-bad1", service, properties);
         runner.assertNotValid(service);
+    }
+
+    /**
+     * Max wait set to -1
+     */
+    @Test
+    public void testMaxWait() throws InitializationException {
+        final TestRunner runner = TestRunners.newTestRunner(TestProcessor.class);
+        final DBCPConnectionPool service = new DBCPConnectionPool();
+        runner.addControllerService("test-good1", service);
+
+        // remove previous test database, if any
+        final File dbLocation = new File(DB_LOCATION);
+        dbLocation.delete();
+
+        // set embedded Derby database connection url
+        runner.setProperty(service, DBCPConnectionPool.DATABASE_URL, "jdbc:derby:" + DB_LOCATION + ";create=true");
+        runner.setProperty(service, DBCPConnectionPool.DB_USER, "tester");
+        runner.setProperty(service, DBCPConnectionPool.DB_PASSWORD, "testerp");
+        runner.setProperty(service, DBCPConnectionPool.DB_DRIVERNAME, "org.apache.derby.jdbc.EmbeddedDriver");
+        runner.setProperty(service, DBCPConnectionPool.MAX_WAIT_TIME, "-1");
+
+        runner.enableControllerService(service);
+        runner.assertValid(service);
     }
 
     /**
@@ -209,9 +232,6 @@ public class DBCPServiceTest {
         server.shutdown();
         server.start();
 
-        // Note!! We should get something like:
-        // org.h2.jdbc.JdbcSQLException: Connection is broken: "session closed" [90067-192]
-        exception.expect(JdbcSQLException.class);
         for (int i = 0; i < 10; i++) {
             final Connection connection = dbcpService.getConnection();
             System.out.println(connection);
