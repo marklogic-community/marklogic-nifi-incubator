@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.apache.nifi</groupId>
         <artifactId>nifi-marklogic-bundle</artifactId>
-        <version>1.8.0-SNAPSHOT</version>
+        <version>1.7.1.1</version>
     </parent>
 
     <artifactId>nifi-marklogic-services-api</artifactId>
@@ -34,7 +34,7 @@
             <groupId>org.apache.nifi</groupId>
             <artifactId>nifi-api</artifactId>
             <version>${nifi.version}</version>
-            <scope>provided</scope>
+            
         </dependency>
         <dependency>
             <groupId>com.marklogic</groupId>
