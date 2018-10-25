@@ -12,15 +12,12 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-[<img src="https://nifi.apache.org/assets/images/apache-nifi-logo.svg" width="300" height="126" alt="Apache NiFi"/>][nifi]
+|Apache NiFi                |  MarkLogic                |
+|:-------------------------:|:-------------------------:|
+|[<img src="https://nifi.apache.org/assets/images/apache-nifi-logo.svg" width="300" height="126" alt="Apache NiFi"/>][nifi]      |  [<img src="https://cdn1.marklogic.com/wp-content/uploads/2017/12/marklogic-logo-footer.svg" width="300" height="126" alt="MarkLogic"/>][marklogic]|
+____________________
 
-[![Build Status](https://travis-ci.org/apache/nifi.svg?branch=master)](https://travis-ci.org/apache/nifi)
-[![Docker pulls](https://img.shields.io/docker/pulls/apache/nifi.svg)](https://hub.docker.com/r/apache/nifi/)
-[![Version](https://img.shields.io/maven-central/v/org.apache.nifi/nifi-utils.svg)](https://nifi.apache.org/download.html)
-[![HipChat](https://img.shields.io/badge/chat-on%20HipChat-brightgreen.svg)](https://www.hipchat.com/gzh2m5YML)
-
-[Apache NiFi](https://nifi.apache.org/) is an easy to use, powerful, and
-reliable system to process and distribute data.
+This fork of Apache NiFi is dedicated to developing the MarkLogic NiFi bundle. 
 
 ## Table of Contents
 
@@ -29,6 +26,7 @@ reliable system to process and distribute data.
 - [Getting Started](#getting-started)
 - [Getting Help](#getting-help)
 - [Documentation](#documentation)
+- [Contributing](#contributing)
 - [License](#license)
 - [Export Control](#export-control)
 
@@ -124,14 +122,30 @@ To run NiFi:
         laptop:nifi-1.0.0-SNAPSHOT myuser$ ./bin/nifi.sh stop
 
 ## Getting Help
+
+### Apache NiFi General Help
+
 If you have questions, you can reach out to our mailing list: dev@nifi.apache.org
 ([archive](http://mail-archives.apache.org/mod_mbox/nifi-dev)).
 For more interactive conversations and chat, we're also often available in IRC: #nifi on
 [irc.freenode.net](http://webchat.freenode.net/?channels=#nifi) and in #NiFi on [ASF HipChat](https://www.hipchat.com/gzh2m5YML). 
 
+### MarkLogic NiFi Bundle Help
+
+See our [documentation](#marklogic-nifi-bundle-documentation).
+
+If you encounter an issue that isn't addressed in the documentation, please open an issue at https://github.com/marklogic/nifi/issues/new.
+
 ## Documentation
 
+### Apache NiFi Documentation
 See http://nifi.apache.org/ for the latest documentation.
+
+### MarkLogic NiFi Bundle Documentation
+See https://marklogic.github.io/nifi/ for the latest documentation.
+
+## Contributing
+Like to contribute? Please see our [Contributing Guidelines](./.github/CONTRIBUTING.md)
 
 ## License
 
@@ -181,4 +195,5 @@ http://www.oracle.com/us/products/export/export-regulations-345813.html
 for more details on each of these libraries cryptography features.
 
 [nifi]: https://nifi.apache.org/
+[marklogic]: https://www.marklogic.com/
 [logo]: https://nifi.apache.org/assets/images/apache-nifi-logo.svg
