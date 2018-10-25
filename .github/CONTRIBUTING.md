@@ -135,7 +135,7 @@ First verify that you have valid server and admin auth info in
 
 If compatible NiFi SNAPSHOT hasn't been installed in your local Maven yet (Grab a cup of coffee while it runs.):
 
-    $ mvn -T 2 clean install -Pcontrib-check,include-grpc,include-atlas,include-hive3 -Ddir-only | grep -v -F -f .travis-output-filters
+    $ mvn -T 2 clean install -Ddir-only -DskipTests | grep -v -F -f .travis-output-filters
 
 Faster process for subsequent tests:
 
