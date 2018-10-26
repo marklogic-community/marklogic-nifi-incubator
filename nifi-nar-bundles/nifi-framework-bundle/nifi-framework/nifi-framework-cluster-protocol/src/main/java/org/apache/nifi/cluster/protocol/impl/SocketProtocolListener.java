@@ -16,15 +16,6 @@
  */
 package org.apache.nifi.cluster.protocol.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.Socket;
-import java.security.cert.CertificateException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.apache.nifi.cluster.protocol.NodeIdentifier;
 import org.apache.nifi.cluster.protocol.ProtocolContext;
 import org.apache.nifi.cluster.protocol.ProtocolException;
@@ -33,6 +24,7 @@ import org.apache.nifi.cluster.protocol.ProtocolListener;
 import org.apache.nifi.cluster.protocol.ProtocolMessageMarshaller;
 import org.apache.nifi.cluster.protocol.ProtocolMessageUnmarshaller;
 import org.apache.nifi.cluster.protocol.message.ConnectionRequestMessage;
+import org.apache.nifi.cluster.protocol.message.OffloadMessage;
 import org.apache.nifi.cluster.protocol.message.DisconnectMessage;
 import org.apache.nifi.cluster.protocol.message.FlowRequestMessage;
 import org.apache.nifi.cluster.protocol.message.HeartbeatMessage;
@@ -48,6 +40,22 @@ import org.apache.nifi.stream.io.ByteCountingInputStream;
 import org.apache.nifi.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.SSLPeerUnverifiedException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 /**
  * Implements a listener for protocol messages sent over unicast socket.
@@ -82,7 +90,6 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
 
     @Override
     public void start() throws IOException {
-
         if (super.isRunning()) {
             throw new IllegalStateException("Instance is already started.");
         }
@@ -92,7 +99,6 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
 
     @Override
     public void stop() throws IOException {
-
         if (super.isRunning() == false) {
             throw new IOException("Instance is already stopped.");
         }
@@ -128,8 +134,6 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
             final String requestId = UUID.randomUUID().toString();
             logger.debug("Received request {} from {}", requestId, hostname);
 
-            String requestorDn = getRequestorDN(socket);
-
             // unmarshall message
             final ProtocolMessageUnmarshaller<ProtocolMessage> unmarshaller = protocolContext.createUnmarshaller();
             final ByteCountingInputStream countingIn = new ByteCountingInputStream(socket.getInputStream());
@@ -151,7 +155,7 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
                 }
             }
 
-            request.setRequestorDN(requestorDn);
+            final Set<String> nodeIdentities = getCertificateIdentities(socket);
 
             // dispatch message to handler
             ProtocolHandler desiredHandler = null;
@@ -168,7 +172,7 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
                 logger.error("Received request of type {} but none of the following Protocol Handlers were able to process the request: {}", request.getType(), handlers);
                 throw new ProtocolException("No handler assigned to handle message type: " + request.getType());
             } else {
-                final ProtocolMessage response = desiredHandler.handle(request);
+                final ProtocolMessage response = desiredHandler.handle(request, nodeIdentities);
                 if (response != null) {
                     try {
                         logger.debug("Sending response for request {}", requestId);
@@ -207,6 +211,8 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
                 return ((ConnectionRequestMessage) message).getConnectionRequest().getProposedNodeIdentifier();
             case HEARTBEAT:
                 return ((HeartbeatMessage) message).getHeartbeat().getNodeIdentifier();
+            case OFFLOAD_REQUEST:
+                return ((OffloadMessage) message).getNodeId();
             case DISCONNECTION_REQUEST:
                 return ((DisconnectMessage) message).getNodeId();
             case FLOW_REQUEST:
@@ -218,11 +224,32 @@ public class SocketProtocolListener extends SocketListener implements ProtocolLi
         }
     }
 
-    private String getRequestorDN(Socket socket) {
-        try {
-            return CertificateUtils.extractPeerDNFromSSLSocket(socket);
-        } catch (CertificateException e) {
-            throw new ProtocolException(e);
+    private Set<String> getCertificateIdentities(final Socket socket) throws IOException {
+        if (socket instanceof SSLSocket) {
+            try {
+                final SSLSession sslSession = ((SSLSocket) socket).getSession();
+                return getCertificateIdentities(sslSession);
+            } catch (CertificateException e) {
+                throw new IOException("Could not extract Subject Alternative Names from client's certificate", e);
+            }
+        } else {
+            return Collections.emptySet();
         }
+    }
+
+    private Set<String> getCertificateIdentities(final SSLSession sslSession) throws CertificateException, SSLPeerUnverifiedException {
+        final Certificate[] certs = sslSession.getPeerCertificates();
+        if (certs == null || certs.length == 0) {
+            throw new SSLPeerUnverifiedException("No certificates found");
+        }
+
+        final X509Certificate cert = CertificateUtils.convertAbstractX509Certificate(certs[0]);
+        cert.checkValidity();
+
+        final Set<String> identities = CertificateUtils.getSubjectAlternativeNames(cert).stream()
+            .map(CertificateUtils::extractUsername)
+            .collect(Collectors.toSet());
+
+        return identities;
     }
 }

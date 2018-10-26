@@ -54,6 +54,8 @@ import org.apache.nifi.controller.exception.ComponentLifeCycleException;
 import org.apache.nifi.controller.exception.ProcessorInstantiationException;
 import org.apache.nifi.controller.label.Label;
 import org.apache.nifi.controller.queue.FlowFileQueue;
+import org.apache.nifi.controller.queue.LoadBalanceCompression;
+import org.apache.nifi.controller.queue.LoadBalanceStrategy;
 import org.apache.nifi.controller.scheduling.StandardProcessScheduler;
 import org.apache.nifi.controller.service.ControllerServiceNode;
 import org.apache.nifi.controller.service.ControllerServiceProvider;
@@ -471,6 +473,10 @@ public final class StandardProcessGroup implements ProcessGroup {
 
         for (final RemoteProcessGroup rpg : procGroup.getRemoteProcessGroups()) {
             rpg.shutdown();
+        }
+
+        for (final Connection connection : procGroup.getConnections()) {
+            connection.getFlowFileQueue().stopLoadBalancing();
         }
 
         // Recursively shutdown child groups.
@@ -957,7 +963,7 @@ public final class StandardProcessGroup implements ProcessGroup {
     public Collection<ProcessorNode> getProcessors() {
         readLock.lock();
         try {
-            return new HashSet<>(processors.values());
+            return new ArrayList<>(processors.values());
         } finally {
             readLock.unlock();
         }
@@ -1111,6 +1117,8 @@ public final class StandardProcessGroup implements ProcessGroup {
             }
 
             connectionToRemove.verifyCanDelete();
+
+            connectionToRemove.getFlowFileQueue().stopLoadBalancing();
 
             final Connectable source = connectionToRemove.getSource();
             final Connectable dest = connectionToRemove.getDestination();
@@ -3863,6 +3871,23 @@ public final class StandardProcessGroup implements ProcessGroup {
             .collect(Collectors.toList());
 
         queue.setPriorities(prioritizers);
+
+        final String loadBalanceStrategyName = proposed.getLoadBalanceStrategy();
+        if (loadBalanceStrategyName == null) {
+            queue.setLoadBalanceStrategy(LoadBalanceStrategy.DO_NOT_LOAD_BALANCE, proposed.getPartitioningAttribute());
+        } else {
+            final LoadBalanceStrategy loadBalanceStrategy = LoadBalanceStrategy.valueOf(loadBalanceStrategyName);
+            final String partitioningAttribute = proposed.getPartitioningAttribute();
+
+            queue.setLoadBalanceStrategy(loadBalanceStrategy, partitioningAttribute);
+        }
+
+        final String compressionName = proposed.getLoadBalanceCompression();
+        if (compressionName == null) {
+            queue.setLoadBalanceCompression(LoadBalanceCompression.DO_NOT_COMPRESS);
+        } else {
+            queue.setLoadBalanceCompression(LoadBalanceCompression.valueOf(compressionName));
+        }
     }
 
     private Connection addConnection(final ProcessGroup destinationGroup, final VersionedConnection proposed, final String componentIdSeed) {
@@ -3884,6 +3909,7 @@ public final class StandardProcessGroup implements ProcessGroup {
         destinationGroup.addConnection(connection);
         updateConnection(connection, proposed);
 
+        flowController.onConnectionAdded(connection);
         return connection;
     }
 
@@ -3907,6 +3933,24 @@ public final class StandardProcessGroup implements ProcessGroup {
                     return port.get();
                 }
 
+                // Attempt to locate child group by versioned component id
+                final Optional<ProcessGroup> optionalSpecifiedGroup = group.getProcessGroups().stream()
+                    .filter(child -> child.getVersionedComponentId().isPresent())
+                    .filter(child -> child.getVersionedComponentId().get().equals(connectableComponent.getGroupId()))
+                    .findFirst();
+
+                if (optionalSpecifiedGroup.isPresent()) {
+                    final ProcessGroup specifiedGroup = optionalSpecifiedGroup.get();
+                    return specifiedGroup.getInputPorts().stream()
+                        .filter(component -> component.getVersionedComponentId().isPresent())
+                        .filter(component -> id.equals(component.getVersionedComponentId().get()))
+                        .findAny()
+                        .orElse(null);
+                }
+
+                // If no child group matched the versioned component id, then look at all child groups. This is done because
+                // in older versions, we did not properly map Versioned Component ID's to Ports' parent groups. As a result,
+                // if the flow doesn't contain the properly mapped group id, we need to search all child groups.
                 return group.getProcessGroups().stream()
                     .flatMap(gr -> gr.getInputPorts().stream())
                     .filter(component -> component.getVersionedComponentId().isPresent())
@@ -3924,6 +3968,24 @@ public final class StandardProcessGroup implements ProcessGroup {
                     return port.get();
                 }
 
+                // Attempt to locate child group by versioned component id
+                final Optional<ProcessGroup> optionalSpecifiedGroup = group.getProcessGroups().stream()
+                    .filter(child -> child.getVersionedComponentId().isPresent())
+                    .filter(child -> child.getVersionedComponentId().get().equals(connectableComponent.getGroupId()))
+                    .findFirst();
+
+                if (optionalSpecifiedGroup.isPresent()) {
+                    final ProcessGroup specifiedGroup = optionalSpecifiedGroup.get();
+                    return specifiedGroup.getOutputPorts().stream()
+                        .filter(component -> component.getVersionedComponentId().isPresent())
+                        .filter(component -> id.equals(component.getVersionedComponentId().get()))
+                        .findAny()
+                        .orElse(null);
+                }
+
+                // If no child group matched the versioned component id, then look at all child groups. This is done because
+                // in older versions, we did not properly map Versioned Component ID's to Ports' parent groups. As a result,
+                // if the flow doesn't contain the properly mapped group id, we need to search all child groups.
                 return group.getProcessGroups().stream()
                     .flatMap(gr -> gr.getOutputPorts().stream())
                     .filter(component -> component.getVersionedComponentId().isPresent())
@@ -4297,6 +4359,7 @@ public final class StandardProcessGroup implements ProcessGroup {
         final Set<FlowDifference> differences = comparison.getDifferences().stream()
                 .filter(difference -> difference.getDifferenceType() != DifferenceType.BUNDLE_CHANGED)
                 .filter(FlowDifferenceFilters.FILTER_ADDED_REMOVED_REMOTE_PORTS)
+                .filter(FlowDifferenceFilters.FILTER_IGNORABLE_VERSIONED_FLOW_COORDINATE_CHANGES)
                 .collect(Collectors.toCollection(HashSet::new));
 
         LOG.debug("There are {} differences between this Local Flow and the Versioned Flow: {}", differences.size(), differences);
@@ -4470,7 +4533,7 @@ public final class StandardProcessGroup implements ProcessGroup {
                 }
             }
 
-            // Ensure that all Prioritizers are instantiate-able.
+            // Ensure that all Prioritizers are instantiate-able and that any load balancing configuration is correct
             final Map<String, VersionedConnection> proposedConnections = new HashMap<>();
             findAllConnections(updatedFlow.getFlowContents(), proposedConnections);
 
@@ -4486,6 +4549,16 @@ public final class StandardProcessGroup implements ProcessGroup {
                         } catch (Exception e) {
                             throw new IllegalArgumentException("Unable to create Prioritizer of type " + prioritizerType, e);
                         }
+                    }
+                }
+
+                final String loadBalanceStrategyName = connectionToAdd.getLoadBalanceStrategy();
+                if (loadBalanceStrategyName != null) {
+                    try {
+                        LoadBalanceStrategy.valueOf(loadBalanceStrategyName);
+                    } catch (final IllegalArgumentException iae) {
+                        throw new IllegalArgumentException("Unable to create Connection with Load Balance Strategy of '" + loadBalanceStrategyName
+                                + "' because this is not a known Load Balance Strategy");
                     }
                 }
             }

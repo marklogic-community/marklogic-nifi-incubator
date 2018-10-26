@@ -139,7 +139,6 @@ public abstract class NiFiProperties {
     public static final String SECURITY_TRUSTSTORE = "nifi.security.truststore";
     public static final String SECURITY_TRUSTSTORE_TYPE = "nifi.security.truststoreType";
     public static final String SECURITY_TRUSTSTORE_PASSWD = "nifi.security.truststorePasswd";
-    public static final String SECURITY_NEED_CLIENT_AUTH = "nifi.security.needClientAuth";
     public static final String SECURITY_USER_AUTHORIZER = "nifi.security.user.authorizer";
     public static final String SECURITY_USER_LOGIN_IDENTITY_PROVIDER = "nifi.security.user.login.identity.provider";
     public static final String SECURITY_OCSP_RESPONDER_URL = "nifi.security.ocsp.responder.url";
@@ -201,6 +200,13 @@ public abstract class NiFiProperties {
     public static final String CLUSTER_FIREWALL_FILE = "nifi.cluster.firewall.file";
     public static final String FLOW_ELECTION_MAX_WAIT_TIME = "nifi.cluster.flow.election.max.wait.time";
     public static final String FLOW_ELECTION_MAX_CANDIDATES = "nifi.cluster.flow.election.max.candidates";
+
+    // cluster load balance properties
+    public static final String LOAD_BALANCE_ADDRESS = "nifi.cluster.load.balance.address";
+    public static final String LOAD_BALANCE_PORT = "nifi.cluster.load.balance.port";
+    public static final String LOAD_BALANCE_CONNECTIONS_PER_NODE = "nifi.cluster.load.balance.connections.per.node";
+    public static final String LOAD_BALANCE_MAX_THREAD_COUNT = "nifi.cluster.load.balance.max.thread.count";
+    public static final String LOAD_BALANCE_COMMS_TIMEOUT = "nifi.cluster.load.balance.comms.timeout";
 
     // zookeeper properties
     public static final String ZOOKEEPER_CONNECT_STRING = "nifi.zookeeper.connect.string";
@@ -284,6 +290,13 @@ public abstract class NiFiProperties {
     public static final int DEFAULT_CLUSTER_NODE_PROTOCOL_MAX_THREADS = 50;
     public static final String DEFAULT_REQUEST_REPLICATION_CLAIM_TIMEOUT = "15 secs";
     public static final String DEFAULT_FLOW_ELECTION_MAX_WAIT_TIME = "5 mins";
+
+    // cluster load balance defaults
+    public static final int DEFAULT_LOAD_BALANCE_PORT = 6342;
+    public static final int DEFAULT_LOAD_BALANCE_CONNECTIONS_PER_NODE = 4;
+    public static final int DEFAULT_LOAD_BALANCE_MAX_THREAD_COUNT = 8;
+    public static final String DEFAULT_LOAD_BALANCE_COMMS_TIMEOUT = "30 sec";
+
 
     // state management defaults
     public static final String DEFAULT_STATE_MANAGEMENT_CONFIG_FILE = "conf/state-management.xml";
@@ -559,20 +572,6 @@ public abstract class NiFiProperties {
         }
     }
 
-    /**
-     * Will default to true unless the value is explicitly set to false.
-     *
-     * @return Whether client auth is required
-     */
-    public boolean getNeedClientAuth() {
-        boolean needClientAuth = true;
-        String rawNeedClientAuth = getProperty(SECURITY_NEED_CLIENT_AUTH);
-        if ("false".equalsIgnoreCase(rawNeedClientAuth)) {
-            needClientAuth = false;
-        }
-        return needClientAuth;
-    }
-
     // getters for web properties //
     public Integer getPort() {
         Integer port = null;
@@ -731,6 +730,23 @@ public abstract class NiFiProperties {
             return InetSocketAddress.createUnresolved(socketAddress, socketPort);
         } catch (Exception ex) {
             throw new RuntimeException("Invalid node protocol address/port due to: " + ex, ex);
+        }
+    }
+
+    public InetSocketAddress getClusterLoadBalanceAddress() {
+        try {
+            String address = getProperty(LOAD_BALANCE_ADDRESS);
+            if (StringUtils.isBlank(address)) {
+                address = getProperty(CLUSTER_NODE_ADDRESS);
+            }
+            if (StringUtils.isBlank(address)) {
+                address = "localhost";
+            }
+
+            final int port = getIntegerProperty(LOAD_BALANCE_PORT, DEFAULT_LOAD_BALANCE_PORT);
+            return InetSocketAddress.createUnresolved(address, port);
+        } catch (final Exception e) {
+            throw new RuntimeException("Invalid load balance address/port due to: " + e, e);
         }
     }
 
