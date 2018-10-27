@@ -29,6 +29,7 @@ import org.apache.nifi.util.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -198,7 +199,7 @@ public abstract class AbstractHeartbeatMonitor implements HeartbeatMonitor {
         final NodeIdentifier nodeId = heartbeat.getNodeIdentifier();
 
         // Do not process heartbeat if it's blocked by firewall.
-        if (clusterCoordinator.isBlockedByFirewall(nodeId.getSocketAddress())) {
+        if (clusterCoordinator.isBlockedByFirewall(Collections.singleton(nodeId.getSocketAddress()))) {
             clusterCoordinator.reportEvent(nodeId, Severity.WARNING, "Firewall blocked received heartbeat. Issuing disconnection request.");
 
             // request node to disconnect
@@ -227,6 +228,14 @@ public abstract class AbstractHeartbeatMonitor implements HeartbeatMonitor {
             return;
         }
 
+        if (NodeConnectionState.OFFLOADED == connectionState || NodeConnectionState.OFFLOADING == connectionState) {
+            // Cluster Coordinator can ignore this heartbeat since the node is offloaded
+            clusterCoordinator.reportEvent(nodeId, Severity.INFO, "Received heartbeat from node that is offloading " +
+                    "or offloaded. Removing this heartbeat.  Offloaded nodes will only be reconnected to the cluster by an " +
+                    "explicit connection request or restarting the node.");
+            removeHeartbeat(nodeId);
+        }
+
         if (NodeConnectionState.DISCONNECTED == connectionState) {
             // ignore heartbeats from nodes disconnected by means other than lack of heartbeat, unless it is
             // the only node. We allow it if it is the only node because if we have a one-node cluster, then
@@ -248,7 +257,7 @@ public abstract class AbstractHeartbeatMonitor implements HeartbeatMonitor {
                 default: {
                     // disconnected nodes should not heartbeat, so we need to issue a disconnection request.
                     logger.info("Ignoring received heartbeat from disconnected node " + nodeId + ".  Issuing disconnection request.");
-                    clusterCoordinator.requestNodeDisconnect(nodeId, disconnectionCode, connectionStatus.getDisconnectReason());
+                    clusterCoordinator.requestNodeDisconnect(nodeId, disconnectionCode, connectionStatus.getReason());
                     removeHeartbeat(nodeId);
                     break;
                 }
