@@ -131,7 +131,7 @@ tests won't be accepted.
 
 First verify that you have valid server and admin auth info in
 `username` and `password` fields in
-`nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-processors/src/test/java/org/apache/nifi/marklogic/processor/AbstractMarkLogicIT.java` and `nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-services/src/test/java/org/apache/nifi/marklogic/controller/DefaultMarkLogicDatabaseClientServiceIT.java`
+`nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-services/src/test/java/org/apache/nifi/marklogic/controller/MarkLogicTestConfig.java`
 
 If compatible NiFi SNAPSHOT hasn't been installed in your local Maven yet (Grab a cup of coffee while it runs.):
 
@@ -152,7 +152,7 @@ by a command like:
     ssh -L 8000:localhost:8000 -L 8002:localhost:8002 -L 8012:localhost:8012 user@hostname
 
 Or you can update the static `hostName` field in
-`nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-processors/src/test/java/org/apache/nifi/marklogic/processor/AbstractMarkLogicIT.java` and `nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-services/src/test/java/org/apache/nifi/marklogic/controller/DefaultMarkLogicDatabaseClientServiceIT.java`.
+`nifi-nar-bundles/nifi-marklogic-bundle/nifi-marklogic-services/src/test/java/org/apache/nifi/marklogic/controller/MarkLogicTestConfig.java`.
 
 #### Push your changes
 
