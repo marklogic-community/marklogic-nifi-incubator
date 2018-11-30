@@ -17,6 +17,7 @@
 package org.apache.nifi.marklogic.processor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -50,13 +51,16 @@ import org.apache.nifi.processor.util.StandardValidators;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.ExportListener;
+import com.marklogic.client.datamovement.JobReport;
 import com.marklogic.client.datamovement.QueryBatch;
+import com.marklogic.client.datamovement.QueryBatchListener;
 import com.marklogic.client.datamovement.QueryBatcher;
-import com.marklogic.client.document.DocumentPage;
-import com.marklogic.client.document.DocumentRecord;
-import com.marklogic.client.document.GenericDocumentManager;
-import com.marklogic.client.impl.GenericDocumentImpl;
+import com.marklogic.client.datamovement.impl.JobReportImpl;
+import com.marklogic.client.document.DocumentManager.Metadata;
+import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.io.BytesHandle;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.query.QueryManager;
@@ -65,57 +69,53 @@ import com.marklogic.client.query.RawStructuredQueryDefinition;
 import com.marklogic.client.query.StringQueryDefinition;
 import com.marklogic.client.query.StructuredQueryDefinition;
 
-@Tags({"MarkLogic", "Get", "Query", "Read"})
+@Tags({ "MarkLogic", "Get", "Query", "Read" })
 @InputRequirement(Requirement.INPUT_ALLOWED)
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
-@CapabilityDescription("Creates FlowFiles from batches of documents, matching the given criteria," +
-    " retrieved from a MarkLogic server using the MarkLogic Data Movement SDK (DMSDK)")
+@CapabilityDescription("Creates FlowFiles from batches of documents, matching the given criteria,"
+        + " retrieved from a MarkLogic server using the MarkLogic Data Movement SDK (DMSDK)")
 @WritesAttributes({
-    @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document retrieved from MarkLogic")})
+        @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document retrieved from MarkLogic") })
 public class QueryMarkLogic extends AbstractMarkLogicProcessor {
 
     public static final PropertyDescriptor CONSISTENT_SNAPSHOT = new PropertyDescriptor.Builder()
-        .name("Consistent Snapshot")
-        .displayName("Consistent Snapshot")
-        .defaultValue("true")
-        .description("Boolean used to indicate that the matching documents were retrieved from a " +
-            "consistent snapshot")
-        .required(true)
-        .addValidator(StandardValidators.BOOLEAN_VALIDATOR)
-        .build();
+            .name("Consistent Snapshot").displayName("Consistent Snapshot").defaultValue("true")
+            .description("Boolean used to indicate that the matching documents were retrieved from a "
+                    + "consistent snapshot")
+            .required(true).addValidator(StandardValidators.BOOLEAN_VALIDATOR).build();
 
-    public static final PropertyDescriptor QUERY = new PropertyDescriptor.Builder()
-        .name("Query")
-        .displayName("Query")
-        .description("Query text that corresponds with the selected Query Type")
-        .required(false)
-        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
-        .addValidator(Validator.VALID)
-        .build();
+    public static final PropertyDescriptor RETURN_TYPE = new PropertyDescriptor.Builder()
+            .name("Return Type").displayName("Return Type").defaultValue(ReturnTypes.DOCUMENTS.getValue())
+            .description("Determines what gets retrieved by query").required(true)
+            .allowableValues(ReturnTypes.allValues)
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
 
-    public static final PropertyDescriptor QUERY_TYPE = new PropertyDescriptor.Builder()
-        .name("Query Type")
-        .displayName("Query Type")
-        .description("Type of query that will be used to retrieve data from MarkLogic")
-        .required(true)
-        .allowableValues(QueryTypes.values())
-        .defaultValue(QueryTypes.COMBINED_JSON.getValue())
-        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-        .build();
+    public static final PropertyDescriptor QUERY = new PropertyDescriptor.Builder().name("Query").displayName("Query")
+            .description("Query text that corresponds with the selected Query Type").required(false)
+            .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES).addValidator(Validator.VALID)
+            .build();
 
-    public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder()
-        .name("Collections")
-        .displayName("Collections")
-        .description("**Deprecated: Use Query Type and Query** Comma-separated list of collections to query from a MarkLogic server")
-        .required(false)
-        .addValidator(Validator.VALID)
-        .build();
+    public static final PropertyDescriptor QUERY_TYPE = new PropertyDescriptor.Builder().name("Query Type")
+            .displayName("Query Type").description("Type of query that will be used to retrieve data from MarkLogic")
+            .required(true).allowableValues(QueryTypes.values()).defaultValue(QueryTypes.COMBINED_JSON.getValue())
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
 
-    protected static final Relationship SUCCESS = new Relationship.Builder()
-        .name("success")
-        .description("All FlowFiles that are created from documents read from MarkLogic are routed to" +
-            " this success relationship.")
-        .build();
+    public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder().name("Collections")
+            .displayName("Collections")
+            .description(
+                    "**Deprecated: Use Query Type and Query** Comma-separated list of collections to query from a MarkLogic server")
+            .required(false).addValidator(Validator.VALID).build();
+
+    protected static final Relationship SUCCESS = new Relationship.Builder().name("success")
+            .description("All FlowFiles that are created from documents read from MarkLogic are routed to"
+                    + " this success relationship.")
+            .build();
+
+    protected static final Relationship FAILURE = new Relationship.Builder()
+            .name("failure")
+            .description("All FlowFiles that failed to produce a valid query.")
+            .build();
+
     private QueryBatcher queryBatcher;
 
     @Override
@@ -126,10 +126,13 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
         list.add(CONSISTENT_SNAPSHOT);
         list.add(QUERY);
         list.add(QUERY_TYPE);
+        list.add(RETURN_TYPE);
+        list.add(TRANSFORM);
         list.add(COLLECTIONS);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
         set.add(SUCCESS);
+        set.add(FAILURE);
         relationships = Collections.unmodifiableSet(set);
     }
 
@@ -138,21 +141,25 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
         Set<ValidationResult> validationResultSet = new HashSet<>();
         String collections = validationContext.getProperty(COLLECTIONS).getValue();
         String query = validationContext.getProperty(QUERY).getValue();
-        if(collections == null && query == null) {
-            validationResultSet.add(new ValidationResult.Builder().subject("Query").valid(false).explanation("The Query value must be set. " +
-              "The deprecated Collections property will be migrated appropriately.").build());
+        if (collections == null && query == null) {
+            validationResultSet.add(new ValidationResult.Builder().subject("Query").valid(false)
+                    .explanation("The Query value must be set. "
+                            + "The deprecated Collections property will be migrated appropriately.")
+                    .build());
         }
         return validationResultSet;
     }
 
     @Override
-    public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory) throws ProcessException {
+    public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory)
+            throws ProcessException {
         final ProcessSession session = sessionFactory.createSession();
         try {
             onTrigger(context, session);
         } catch (final Throwable t) {
-            getLogger().error("{} failed to process due to {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed to process due to {}; rolling back session", new Object[] { this, t });
             session.rollback(true);
+            context.yield();
             throw new ProcessException(t);
         }
     }
@@ -165,42 +172,127 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
         }
 
         DataMovementManager dataMovementManager = getDatabaseClient(context).newDataMovementManager();
-        queryBatcher = createQueryBatcherWithQueryCriteria(context, input, getDatabaseClient(context), dataMovementManager);
-        if(context.getProperty(BATCH_SIZE).asInteger() != null) queryBatcher.withBatchSize(context.getProperty(BATCH_SIZE).asInteger());
-        if(context.getProperty(THREAD_COUNT).asInteger() != null) queryBatcher.withThreadCount(context.getProperty(THREAD_COUNT).asInteger());
+        queryBatcher = createQueryBatcherWithQueryCriteria(context, session, input, getDatabaseClient(context),
+                dataMovementManager);
+        if (context.getProperty(BATCH_SIZE).asInteger() != null)
+            queryBatcher.withBatchSize(context.getProperty(BATCH_SIZE).asInteger());
+        if (context.getProperty(THREAD_COUNT).asInteger() != null)
+            queryBatcher.withThreadCount(context.getProperty(THREAD_COUNT).asInteger());
         final boolean consistentSnapshot;
-        if(context.getProperty(CONSISTENT_SNAPSHOT).asBoolean() != null && !context.getProperty(CONSISTENT_SNAPSHOT).asBoolean()) {
+        if (context.getProperty(CONSISTENT_SNAPSHOT).asBoolean() != null
+                && !context.getProperty(CONSISTENT_SNAPSHOT).asBoolean()) {
             consistentSnapshot = false;
         } else {
             queryBatcher.withConsistentSnapshot();
             consistentSnapshot = true;
         }
 
-        queryBatcher.onUrisReady(batch -> {
-            try( DocumentPage docs = getDocs(batch, consistentSnapshot) ) {
-                while ( docs.hasNext() ) {
-                    DocumentRecord documentRecord = docs.next();
-                    FlowFile flowFile = session.create();
-                    flowFile = session.write(flowFile, out -> out.write(documentRecord.getContent(new BytesHandle()).get()));
-                    session.putAttribute(flowFile, CoreAttributes.FILENAME.key(), documentRecord.getUri());
-                    session.transfer(flowFile, SUCCESS);
-                    if (getLogger().isDebugEnabled()) {
-                        getLogger().debug("Routing " + documentRecord.getUri() + " to " + SUCCESS.getName());
-                    }
-                }
-                session.commit();
-            } catch (final Throwable t) {
-                getLogger().error("{} failed to process due to {}; rolling back session", new Object[]{this, t});
-                session.rollback(true);
-                throw new ProcessException(t);
+        QueryBatchListener batchListener = buildQueryBatchListener(context, session, consistentSnapshot);
+        queryBatcher.onJobCompletion((batcher) -> {
+            JobReport report = new JobReportImpl(batcher);
+            if (report.getSuccessEventsCount() == 0) {
+                context.yield();
+            }
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("ML Query Job Complete [Success Count=" + report.getSuccessEventsCount() + "] [Failure Count=" + report.getFailureEventsCount() + "]");
             }
         });
+        queryBatcher.onUrisReady(batchListener);
         dataMovementManager.startJob(queryBatcher);
         queryBatcher.awaitCompletion();
         dataMovementManager.stopJob(queryBatcher);
     }
 
-    private QueryBatcher createQueryBatcherWithQueryCriteria(ProcessContext context, FlowFile flowFile, DatabaseClient databaseClient, DataMovementManager dataMovementManager) {
+    protected QueryBatchListener buildQueryBatchListener(final ProcessContext context, final ProcessSession session, final boolean consistentSnapshot) {
+        final boolean retrieveFullDocument;
+        if (context.getProperty(RETURN_TYPE) != null
+                && (ReturnTypes.DOCUMENTS_STR.equals(context.getProperty(RETURN_TYPE).getValue())
+                        || ReturnTypes.DOCUMENTS_AND_META_STR.equals(context.getProperty(RETURN_TYPE).getValue()))) {
+            retrieveFullDocument = true;
+        } else {
+            retrieveFullDocument = false;
+        }
+        final boolean retrieveMetadata;
+        if (context.getProperty(RETURN_TYPE) != null
+                && (ReturnTypes.META.getValue().equals(context.getProperty(RETURN_TYPE).getValue())
+                        || ReturnTypes.DOCUMENTS_AND_META.getValue().equals(context.getProperty(RETURN_TYPE).getValue()))) {
+            retrieveMetadata = true;
+        } else {
+            retrieveMetadata = false;
+        }
+
+        QueryBatchListener batchListener = null;
+
+        if (retrieveFullDocument) {
+            ExportListener exportListener = new ExportListener().onDocumentReady(doc -> {
+                synchronized(session) {
+                    final FlowFile flowFile = session.write(session.create(),
+                            out -> out.write(doc.getContent(new BytesHandle()).get()));
+                    if (retrieveMetadata) {
+                        DocumentMetadataHandle metaHandle = doc.getMetadata(new DocumentMetadataHandle());
+                        metaHandle.getMetadataValues().forEach((metaKey,metaValue) -> {
+                            session.putAttribute(flowFile, "meta:" + metaKey, metaValue);
+                        });
+                        metaHandle.getProperties().forEach((qname,propertyValue) -> {
+                            session.putAttribute(flowFile, "property:" + qname.toString(), propertyValue.toString());
+                        });
+                    }
+                    session.putAttribute(flowFile, CoreAttributes.FILENAME.key(), doc.getUri());
+                    session.transfer(flowFile, SUCCESS);
+                    if (getLogger().isDebugEnabled()) {
+                        getLogger().debug("Routing " + doc.getUri() + " to " + SUCCESS.getName());
+                    }
+                    session.commit();
+                }
+            });
+            if (retrieveMetadata) {
+                exportListener.withMetadataCategory(Metadata.PROPERTIES);
+                exportListener.withMetadataCategory(Metadata.METADATAVALUES);
+            }
+            if (consistentSnapshot) {
+                exportListener.withConsistentSnapshot();
+            }
+            ServerTransform transform = this.buildServerTransform(context);
+            if (transform != null) {
+                exportListener.withTransform(transform);
+            }
+            batchListener = exportListener;
+        } else {
+            batchListener = new QueryBatchListener() {
+                @Override
+                public void processEvent(QueryBatch batch) {
+                    synchronized(session) {
+                        Arrays.stream(batch.getItems()).forEach((uri) -> {
+                            FlowFile flowFile = session.create();
+                            session.putAttribute(flowFile, CoreAttributes.FILENAME.key(), uri);
+                            if (retrieveMetadata) {
+                                DocumentMetadataHandle metaHandle = new DocumentMetadataHandle();
+                                if (consistentSnapshot) {
+                                    metaHandle.setServerTimestamp(batch.getServerTimestamp());
+                                }
+                                batch.getClient().newDocumentManager().readMetadata(uri, metaHandle);
+                                metaHandle.getMetadataValues().forEach((metaKey,metaValue) -> {
+                                    session.putAttribute(flowFile, "meta:" + metaKey, metaValue);
+                                });
+                                metaHandle.getProperties().forEach((qname,propertyValue) -> {
+                                    session.putAttribute(flowFile, "property:" + qname.toString(), propertyValue.toString());
+                                });
+                            }
+                            session.transfer(flowFile, SUCCESS);
+                            if (getLogger().isDebugEnabled()) {
+                                getLogger().debug("Routing " + uri + " to " + SUCCESS.getName());
+                            }
+                        });;
+                        session.commit();
+                    }
+                }
+            };
+        }
+        return batchListener;
+    }
+
+    private QueryBatcher createQueryBatcherWithQueryCriteria(ProcessContext context, ProcessSession session, FlowFile flowFile,
+            DatabaseClient databaseClient, DataMovementManager dataMovementManager) {
         final PropertyValue queryProperty = context.getProperty(QUERY);
         final String queryValue;
         final String queryTypeValue;
@@ -245,19 +337,23 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
                     throw new IllegalStateException("No valid Query type selected!");
             }
         }
-        if(queryBatcher == null) {
+        if (queryBatcher == null) {
             throw new IllegalStateException("No valid Query criteria specified!");
         }
+        queryBatcher.onQueryFailure(exception -> {
+            FlowFile failureFlowFile = null;
+            if (flowFile != null) {
+                failureFlowFile = session.penalize(flowFile);
+            } else {
+                failureFlowFile = session.create();
+            }
+            session.transfer(failureFlowFile, FAILURE);
+            session.commit();
+            if (getLogger().isDebugEnabled()) {
+                getLogger().debug("Query failure: " + exception.getMessage());
+            }
+        });
         return queryBatcher;
-    }
-
-    private DocumentPage getDocs(QueryBatch batch, boolean consistentSnapshot) {
-        GenericDocumentManager docMgr = batch.getClient().newDocumentManager();
-        if (consistentSnapshot) {
-            return ((GenericDocumentImpl) docMgr).read( batch.getServerTimestamp(), batch.getItems() );
-        } else {
-            return docMgr.read( batch.getItems() );
-        }
     }
 
     QueryBatcher getQueryBatcher() {
@@ -269,17 +365,20 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
         return handle;
     }
 
-    QueryBatcher batcherFromCombinedQuery(DataMovementManager dataMovementManager, QueryManager queryMgr, String queryValue, Format format) {
+    QueryBatcher batcherFromCombinedQuery(DataMovementManager dataMovementManager, QueryManager queryMgr,
+            String queryValue, Format format) {
         RawCombinedQueryDefinition qdef = queryMgr.newRawCombinedQueryDefinition(handleForQuery(queryValue, format));
         return dataMovementManager.newQueryBatcher(qdef);
     }
 
-    QueryBatcher batcherFromStructuredQuery(DataMovementManager dataMovementManager, QueryManager queryMgr, String queryValue, Format format) {
-        RawStructuredQueryDefinition qdef = queryMgr.newRawStructuredQueryDefinition(handleForQuery(queryValue, format));
+    QueryBatcher batcherFromStructuredQuery(DataMovementManager dataMovementManager, QueryManager queryMgr,
+            String queryValue, Format format) {
+        RawStructuredQueryDefinition qdef = queryMgr
+                .newRawStructuredQueryDefinition(handleForQuery(queryValue, format));
         return dataMovementManager.newQueryBatcher(qdef);
     }
 
-    public static class QueryTypes {
+    public static class QueryTypes extends AllowableValuesSet {
         public static final String COLLECTION_STR = "Collection Query";
         public static final AllowableValue COLLECTION = new AllowableValue(COLLECTION_STR, COLLECTION_STR,
                 "Comma-separated list of collections to query from a MarkLogic server");
@@ -301,19 +400,23 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
 
         public static final AllowableValue[] allValues = new AllowableValue[] { COLLECTION, COMBINED_JSON, COMBINED_XML, STRING, STRUCTURED_JSON, STRUCTURED_XML };
 
-        public static AllowableValue[] values() {
-            return allValues;
-        }
+    }
 
-        public static AllowableValue valueOf(String valueString) {
-            AllowableValue value = null;
-            for (int i = 0; i < allValues.length; i++) {
-                if (allValues[i].getValue().equals(valueString)) {
-                    value = allValues[i];
-                    break;
-                }
-            }
-            return value;
-        }
+    public static class ReturnTypes extends AllowableValuesSet {
+        public static final String URIS_ONLY_STR = "URIs Only";
+        public static final AllowableValue URIS_ONLY = new AllowableValue(URIS_ONLY_STR, URIS_ONLY_STR,
+                "Only return document URIs for matching documents in FlowFile attribute");
+        public static final String DOCUMENTS_STR = "Documents";
+        public static final AllowableValue DOCUMENTS = new AllowableValue(DOCUMENTS_STR, DOCUMENTS_STR,
+                "Return documents in FlowFile contents");
+        public static final String DOCUMENTS_AND_META_STR = "Documents + Metadata";
+        public static final AllowableValue DOCUMENTS_AND_META = new AllowableValue(DOCUMENTS_AND_META_STR, DOCUMENTS_AND_META_STR,
+                "Return documents in FlowFile contents and metadata in FlowFile attributes");
+        public static final String META_STR = "Metadata";
+        public static final AllowableValue META = new AllowableValue(META_STR, META_STR,
+                "Return metadata in FlowFile attributes");
+
+        public static final AllowableValue[] allValues = new AllowableValue[] { URIS_ONLY, DOCUMENTS, DOCUMENTS_AND_META, META };
+
     }
 }

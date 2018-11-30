@@ -52,8 +52,6 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
     private static List<PropertyDescriptor> properties;
 
     private DatabaseClient databaseClient;
-    private boolean isLoadBalanacer = false;
-
     public static final PropertyDescriptor HOST = new PropertyDescriptor.Builder()
         .name("Host")
         .displayName("Host")
@@ -87,9 +85,7 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
         .required(true)
         .allowableValues(SecurityContextType.values())
         .description("The type of the Security Context that needs to be used for authentication")
-        .allowableValues(SecurityContextType.BASIC.name(), SecurityContextType.DIGEST.name(), SecurityContextType.CERTIFICATE.name())
- //     TODO: Add support for Kerberos authentication after testing
- //     , SecurityContextType.KERBEROS.name())
+        .allowableValues(SecurityContextType.BASIC.name(), SecurityContextType.DIGEST.name(), SecurityContextType.CERTIFICATE.name(), SecurityContextType.KERBEROS.name())
         .defaultValue(SecurityContextType.DIGEST.name())
         .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
         .build();
@@ -116,14 +112,13 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
         .addValidator(Validator.VALID)
         .build();
 
-/*
     public static final PropertyDescriptor EXTERNAL_NAME = new PropertyDescriptor.Builder()
         .name("External name")
         .displayName("External name")
         .description("External name of the Kerberos Client - Required for Kerberos authentication")
         .addValidator(Validator.VALID)
         .build();
-*/
+
     public static final PropertyDescriptor SSL_CONTEXT_SERVICE = new PropertyDescriptor.Builder()
             .name("SSL Context Service")
             .displayName("SSL Context Service")
@@ -150,7 +145,7 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
         list.add(USERNAME);
         list.add(PASSWORD);
         list.add(DATABASE);
-        // list.add(EXTERNAL_NAME);
+        list.add(EXTERNAL_NAME);
         list.add(SSL_CONTEXT_SERVICE);
         list.add(CLIENT_AUTH);
         properties = Collections.unmodifiableList(list);
@@ -172,7 +167,10 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
             config.setConnectionType(DatabaseClient.ConnectionType.GATEWAY);
         }
 
-        // config.setExternalName(context.getProperty(EXTERNAL_NAME).getValue());
+        if (context.getProperty(EXTERNAL_NAME) != null && !"".equals(context.getProperty(EXTERNAL_NAME).getValue())) {
+            config.setExternalName(context.getProperty(EXTERNAL_NAME).getValue());
+        }
+
         final SSLContextService sslService = context.getProperty(SSL_CONTEXT_SERVICE).asControllerService(SSLContextService.class);
         if(sslService != null) {
             final SSLContextService.ClientAuth clientAuth;

@@ -249,7 +249,6 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
         runner.shutdown();
     }
 
-
     @Test
     public void testStringQuery() throws InitializationException, SAXException, IOException, ParserConfigurationException {
         TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
@@ -271,6 +270,26 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
         byte[] expectedByteArray = documents.get(xmlMod).getContent().getBytes();
 
         assertBytesAreEqualXMLDocs(expectedByteArray,actualByteArray);
+        runner.shutdown();
+    }
+
+    @Test
+    public void testUrisOnly() throws InitializationException, SAXException, IOException, ParserConfigurationException {
+        TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
+        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.URIS_ONLY);
+        runner.setProperty(QueryMarkLogic.QUERY, "xmlcontent");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRING);
+        runner.assertValid();
+        runner.run();
+        runner.assertTransferCount(QueryMarkLogic.SUCCESS, expectedXmlCount);
+        runner.assertAllFlowFilesContainAttribute(QueryMarkLogic.SUCCESS,CoreAttributes.FILENAME.key());
+        List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(QueryMarkLogic.SUCCESS);
+        assertEquals(flowFiles.size(), expectedXmlCount);
+        byte[] actualByteArray = null;
+        for(MockFlowFile flowFile : flowFiles) {
+            actualByteArray = runner.getContentAsByteArray(flowFile);
+            assertEquals(actualByteArray.length,0);
+        }
         runner.shutdown();
     }
 
