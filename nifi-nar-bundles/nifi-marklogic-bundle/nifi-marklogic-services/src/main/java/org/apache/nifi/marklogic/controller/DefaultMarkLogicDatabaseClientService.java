@@ -17,6 +17,7 @@
 package org.apache.nifi.marklogic.controller;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.ext.DatabaseClientConfig;
 import com.marklogic.client.ext.DefaultConfiguredDatabaseClientFactory;
 import com.marklogic.client.ext.SecurityContextType;
@@ -194,6 +195,7 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
                 }
                 final SSLContext sslContext = sslService.createSSLContext(clientAuth);
                 config.setSslContext(sslContext);
+                config.setSslHostnameVerifier(DatabaseClientFactory.SSLHostnameVerifier.ANY);
             } catch (Exception e) {
                 getLogger().error("Failed to create SSLContext due to {}", new Object[]{e} );
                 throw new ProcessException(e);
