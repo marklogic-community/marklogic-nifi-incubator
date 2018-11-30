@@ -31,6 +31,7 @@ import org.apache.nifi.annotation.behavior.TriggerWhenEmpty;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.annotation.lifecycle.OnShutdown;
 import org.apache.nifi.annotation.lifecycle.OnStopped;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.PropertyValue;
@@ -49,11 +50,11 @@ import org.apache.nifi.stream.io.StreamUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 /**
@@ -78,7 +79,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             this.session = session;
         }
     }
-    private Map<String, FlowFileInfo> uriFlowFileMap = new HashMap<>();
+    private static final Map<String, FlowFileInfo> uriFlowFileMap = new ConcurrentHashMap<>();
     public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder()
         .name("Collections")
         .displayName("Collections")
@@ -137,15 +138,6 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .name("Temporal Collection")
         .displayName("Temporal Collection")
         .description("The temporal collection to use for a temporal document insert")
-        .addValidator(Validator.VALID)
-        .required(false)
-        .build();
-
-    public static final PropertyDescriptor TRANSFORM = new PropertyDescriptor.Builder()
-        .name("Server Transform")
-        .displayName("Server Transform")
-        .description("The name of REST server transform to apply to every document as it's" +
-            " written")
         .addValidator(Validator.VALID)
         .required(false)
         .build();
@@ -236,14 +228,8 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             .withBatchSize(context.getProperty(BATCH_SIZE).asInteger())
             .withTemporalCollection(context.getProperty(TEMPORAL_COLLECTION).getValue());
 
-        final String transform = context.getProperty(TRANSFORM).getValue();
-        if (transform != null) {
-            ServerTransform serverTransform = new ServerTransform(transform);
-            final String transformPrefix = "trans:";
-            for (final PropertyDescriptor descriptor : context.getProperties().keySet()) {
-                if (!descriptor.isDynamic() && !descriptor.getName().startsWith(transformPrefix)) continue;
-                serverTransform.addParameter(descriptor.getName().substring(transformPrefix.length()), context.getProperty(descriptor).getValue());
-            }
+        ServerTransform serverTransform = buildServerTransform(context);
+        if (serverTransform != null) {
             writeBatcher.withTransform(serverTransform);
         }
         Integer threadCount = context.getProperty(THREAD_COUNT).asInteger();
@@ -267,9 +253,11 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         String flowFileUUID = metadata.getMetadataValues().get("flowFileUUID");
         FlowFileInfo flowFile = uriFlowFileMap.get(flowFileUUID);
         if(flowFile != null) {
-            flowFile.session.getProvenanceReporter().send(flowFile.flowFile, writeEvent.getTargetUri());
-            flowFile.session.transfer(flowFile.flowFile, relationship);
-            flowFile.session.commit();
+            synchronized(flowFile.session) {
+                flowFile.session.getProvenanceReporter().send(flowFile.flowFile, writeEvent.getTargetUri());
+                flowFile.session.transfer(flowFile.flowFile, relationship);
+                flowFile.session.commit();
+            }
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("Routing " + writeEvent.getTargetUri() + " to " + relationship.getName());
             }
@@ -301,11 +289,11 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
     public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
         FlowFile flowFile = session.get();
         if (flowFile == null) {
-            context.yield();
             if (shouldFlushIfEmpty) {
                 flushWriteBatcherAsync(this.writeBatcher);
             }
             shouldFlushIfEmpty = false;
+            context.yield();
         } else {
             shouldFlushIfEmpty = true;
 
@@ -354,7 +342,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
         // getArrayFromCommaSeparatedString checks to see if collectionsValue is empty or null.
         // If collectionsValue is empty or NULL, collections would be NULL. So, no need to check if
-        // collectionsValue is emopty or null again here
+        // collectionsValue is empty or null again here
         if (collections != null && !collectionsValue.startsWith("${") && !collectionsValue.endsWith("}")) {
             metadata.withCollections(collections);
         }
@@ -418,6 +406,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         }
     }
 
+    @OnShutdown
     @OnStopped
     public void completeWriteBatcherJob() {
         if (writeBatcher != null) {

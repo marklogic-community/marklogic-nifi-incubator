@@ -115,6 +115,22 @@ public class QueryMarkLogicTest extends AbstractMarkLogicProcessorTest {
         assertEquals(handle.getFormat(), Format.XML);
     }
 
+    @Test
+    public void testRetrieveFullDocumentsFalse() throws Exception {
+        StringHandle handle;
+        TestQueryBatcher queryBatcher;
+
+        processContext.setProperty(TestQueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.URIS_ONLY_STR);
+
+        processContext.setProperty(TestQueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRUCTURED_XML.getValue());
+        processor.initialize(initializationContext);
+        processor.onTrigger(processContext, mockProcessSessionFactory);
+        queryBatcher = (TestQueryBatcher) processor.getQueryBatcher();
+        assertTrue(queryBatcher.getQueryDefinition() instanceof RawStructuredQueryDefinition);
+        handle = (StringHandle) ((RawStructuredQueryDefinition)queryBatcher.getQueryDefinition()).getHandle();
+        assertEquals(handle.getFormat(), Format.XML);
+    }
+
     class TestQueryMarkLogic extends QueryMarkLogic {
         @Override
         public DatabaseClient getDatabaseClient(ProcessContext context) {
