@@ -17,6 +17,11 @@
 package org.apache.nifi.marklogic.processor;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.FailedRequestException;
+import com.marklogic.client.ForbiddenUserException;
+import com.marklogic.client.MarkLogicBindingException;
+import com.marklogic.client.ResourceNotFoundException;
+import com.marklogic.client.UnauthorizedUserException;
 import com.marklogic.client.document.ServerTransform;
 
 import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
@@ -27,12 +32,14 @@ import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
 import org.apache.nifi.processor.ProcessContext;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
+import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Defines common properties for MarkLogic processors.
@@ -75,6 +82,14 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
             .addValidator(Validator.VALID)
             .required(false)
             .build();
+
+    // Patterns for more friendly error messages.
+    private Pattern unauthorizedPattern =
+            Pattern.compile("(?i)unauthorized", Pattern.CASE_INSENSITIVE);
+    private Pattern forbiddenPattern =
+            Pattern.compile("(?i)forbidden", Pattern.CASE_INSENSITIVE);
+    private Pattern resourceNotFoundPattern =
+            Pattern.compile("(?i)resource not found", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void init(final ProcessorInitializationContext context) {
@@ -148,6 +163,31 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
                 }
             }
             return value;
+        }
+    }
+
+    protected void handleThrowable(final Throwable t) {
+        final String statusMsg;
+        /* FailedRequestException can hide the root cause a layer deeper.
+         * Go to the failed request to get the status code.
+         */
+        if (t instanceof FailedRequestException) {
+            statusMsg = ((FailedRequestException) t).getFailedRequest().getMessage();
+        } else {
+            statusMsg = "";
+        }
+        if (t instanceof UnauthorizedUserException || statusMsg.matches(unauthorizedPattern.pattern())) {
+            getLogger().error("{} failed! Verfiy your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else if (t instanceof ForbiddenUserException || statusMsg.matches(forbiddenPattern.pattern())) {
+            getLogger().error("{} failed! Verfiy your users has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else if (t instanceof ResourceNotFoundException || statusMsg.matches(resourceNotFoundPattern.pattern())) {
+            getLogger().error("{} failed due to 'Resource Not Found'! " +
+                    "Verifiy you're pointing a MarkLogic REST instance and referenced extensions/transforms are installed. "+
+                    "Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else if (t instanceof MarkLogicBindingException) {
+            getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else {
+            throw new ProcessException(t);
         }
     }
 

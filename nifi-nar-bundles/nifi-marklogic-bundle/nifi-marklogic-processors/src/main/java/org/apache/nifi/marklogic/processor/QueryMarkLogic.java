@@ -154,53 +154,52 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
     public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory)
             throws ProcessException {
         final ProcessSession session = sessionFactory.createSession();
-        try {
-            onTrigger(context, session);
-        } catch (final Throwable t) {
-            getLogger().error("{} failed to process due to {}; rolling back session", new Object[] { this, t });
-            session.rollback(true);
-            context.yield();
-            throw new ProcessException(t);
-        }
+        onTrigger(context, session);
     }
 
     public final void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
-        FlowFile input = null;
+        try {
+            FlowFile input = null;
 
-        if (context.hasIncomingConnection()) {
-            input = session.get();
-        }
-
-        DataMovementManager dataMovementManager = getDatabaseClient(context).newDataMovementManager();
-        queryBatcher = createQueryBatcherWithQueryCriteria(context, session, input, getDatabaseClient(context),
-                dataMovementManager);
-        if (context.getProperty(BATCH_SIZE).asInteger() != null)
-            queryBatcher.withBatchSize(context.getProperty(BATCH_SIZE).asInteger());
-        if (context.getProperty(THREAD_COUNT).asInteger() != null)
-            queryBatcher.withThreadCount(context.getProperty(THREAD_COUNT).asInteger());
-        final boolean consistentSnapshot;
-        if (context.getProperty(CONSISTENT_SNAPSHOT).asBoolean() != null
-                && !context.getProperty(CONSISTENT_SNAPSHOT).asBoolean()) {
-            consistentSnapshot = false;
-        } else {
-            queryBatcher.withConsistentSnapshot();
-            consistentSnapshot = true;
-        }
-
-        QueryBatchListener batchListener = buildQueryBatchListener(context, session, consistentSnapshot);
-        queryBatcher.onJobCompletion((batcher) -> {
-            JobReport report = new JobReportImpl(batcher);
-            if (report.getSuccessEventsCount() == 0) {
-                context.yield();
+            if (context.hasIncomingConnection()) {
+                input = session.get();
             }
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("ML Query Job Complete [Success Count=" + report.getSuccessEventsCount() + "] [Failure Count=" + report.getFailureEventsCount() + "]");
+
+            DataMovementManager dataMovementManager = getDatabaseClient(context).newDataMovementManager();
+            queryBatcher = createQueryBatcherWithQueryCriteria(context, session, input, getDatabaseClient(context),
+                    dataMovementManager);
+            if (context.getProperty(BATCH_SIZE).asInteger() != null)
+                queryBatcher.withBatchSize(context.getProperty(BATCH_SIZE).asInteger());
+            if (context.getProperty(THREAD_COUNT).asInteger() != null)
+                queryBatcher.withThreadCount(context.getProperty(THREAD_COUNT).asInteger());
+            final boolean consistentSnapshot;
+            if (context.getProperty(CONSISTENT_SNAPSHOT).asBoolean() != null
+                    && !context.getProperty(CONSISTENT_SNAPSHOT).asBoolean()) {
+                consistentSnapshot = false;
+            } else {
+                queryBatcher.withConsistentSnapshot();
+                consistentSnapshot = true;
             }
-        });
-        queryBatcher.onUrisReady(batchListener);
-        dataMovementManager.startJob(queryBatcher);
-        queryBatcher.awaitCompletion();
-        dataMovementManager.stopJob(queryBatcher);
+
+            QueryBatchListener batchListener = buildQueryBatchListener(context, session, consistentSnapshot);
+            queryBatcher.onJobCompletion((batcher) -> {
+                JobReport report = new JobReportImpl(batcher);
+                if (report.getSuccessEventsCount() == 0) {
+                    context.yield();
+                }
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("ML Query Job Complete [Success Count=" + report.getSuccessEventsCount() + "] [Failure Count=" + report.getFailureEventsCount() + "]");
+                }
+            });
+            queryBatcher.onUrisReady(batchListener);
+            dataMovementManager.startJob(queryBatcher);
+            queryBatcher.awaitCompletion();
+            dataMovementManager.stopJob(queryBatcher);
+        } catch (final Throwable t) {
+            session.rollback(true);
+            context.yield();
+            this.handleThrowable(t);
+        }
     }
 
     protected QueryBatchListener buildQueryBatchListener(final ProcessContext context, final ProcessSession session, final boolean consistentSnapshot) {

@@ -268,13 +268,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
     @Override
     public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory) throws ProcessException {
         final ProcessSession session = sessionFactory.createSession();
-        try {
-            onTrigger(context, session);
-        } catch (final Throwable t) {
-            getLogger().error("{} failed to process due to {}; rolling back session", new Object[]{this, t});
-            session.rollback(true);
-            throw new ProcessException(t);
-        }
+        onTrigger(context, session);
     }
     /**
      * When a FlowFile is received, hand it off to the WriteBatcher so it can be written to MarkLogic.
@@ -287,21 +281,26 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
      *
      */
     public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
-        FlowFile flowFile = session.get();
-        if (flowFile == null) {
-            if (shouldFlushIfEmpty) {
-                flushWriteBatcherAsync(this.writeBatcher);
-            }
-            shouldFlushIfEmpty = false;
-            context.yield();
-        } else {
-            shouldFlushIfEmpty = true;
+        try {
+            FlowFile flowFile = session.get();
+            if (flowFile == null) {
+                if (shouldFlushIfEmpty) {
+                    flushWriteBatcherAsync(this.writeBatcher);
+                }
+                shouldFlushIfEmpty = false;
+                context.yield();
+            } else {
+                shouldFlushIfEmpty = true;
 
-            WriteEvent writeEvent = buildWriteEvent(context, session, flowFile);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Writing URI: " + writeEvent.getTargetUri());
+                WriteEvent writeEvent = buildWriteEvent(context, session, flowFile);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("Writing URI: " + writeEvent.getTargetUri());
+                }
+                addWriteEvent(this.writeBatcher, writeEvent);
             }
-            addWriteEvent(this.writeBatcher, writeEvent);
+        } catch (final Throwable t) {
+            session.rollback(true);
+            this.handleThrowable(t);
         }
     }
 
