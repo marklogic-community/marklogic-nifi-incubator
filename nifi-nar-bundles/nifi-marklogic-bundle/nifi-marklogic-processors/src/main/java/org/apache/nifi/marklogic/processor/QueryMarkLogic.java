@@ -97,7 +97,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
 
     public static final PropertyDescriptor QUERY_TYPE = new PropertyDescriptor.Builder().name("Query Type")
             .displayName("Query Type").description("Type of query that will be used to retrieve data from MarkLogic")
-            .required(true).allowableValues(QueryTypes.values()).defaultValue(QueryTypes.COMBINED_JSON.getValue())
+            .required(true).allowableValues(QueryTypes.allValues).defaultValue(QueryTypes.COMBINED_JSON.getValue())
             .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
 
     public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder().name("Collections")
@@ -348,9 +348,8 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
             }
             session.transfer(failureFlowFile, FAILURE);
             session.commit();
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Query failure: " + exception.getMessage());
-            }
+            getLogger().error("Query failure: " + exception.getMessage());
+            context.yield();
         });
         return queryBatcher;
     }
