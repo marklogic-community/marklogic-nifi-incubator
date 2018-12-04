@@ -28,6 +28,7 @@ import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
 import org.apache.nifi.annotation.behavior.TriggerWhenEmpty;
+import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
@@ -55,6 +56,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -69,6 +72,7 @@ import java.util.concurrent.ConcurrentHashMap;
     description = "Adds server transform parameters to be passed to the server transform specified. "
     + "Server transform parameter name should start with the string 'trans:'.")
 @TriggerWhenEmpty
+@WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
 public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     class FlowFileInfo {
@@ -167,6 +171,11 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .addValidator(Validator.VALID)
         .build();
 
+    protected static final Relationship BATCH_SUCCESS = new Relationship.Builder()
+        .name("batch_success")
+        .description("All successful URIs in a batch passed comma-separated in URIs FlowFile attribute.")
+        .build();
+
     protected static final Relationship SUCCESS = new Relationship.Builder()
         .name("success")
         .description("All FlowFiles that are successfully written to MarkLogic are routed to the " +
@@ -214,6 +223,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         list.add(URI_SUFFIX);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
+        set.add(BATCH_SUCCESS);
         set.add(SUCCESS);
         set.add(FAILURE);
         relationships = Collections.unmodifiableSet(set);
@@ -237,6 +247,16 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             writeBatcher.withThreadCount(threadCount);
         }
         this.writeBatcher.onBatchSuccess(writeBatch -> {
+            ProcessSession session = getFlowFileInfoForWriteEvent(writeBatch.getItems()[1]).session;
+            synchronized(session) {
+                String uriList = Stream.of(writeBatch.getItems()).map((item) -> {
+                    return item.getTargetUri();
+                }).collect(Collectors.joining(","));
+                FlowFile batchFlowFile = session.create();
+                session.putAttribute(batchFlowFile, "URIs", uriList);
+                session.transfer(batchFlowFile, BATCH_SUCCESS);
+                session.commit();
+            }
             for(WriteEvent writeEvent : writeBatch.getItems()) {
                 routeDocumentToRelationship(writeEvent, SUCCESS);
             }
@@ -248,10 +268,14 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         dataMovementManager.startJob(writeBatcher);
     }
 
-    private void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
+    private FlowFileInfo getFlowFileInfoForWriteEvent(WriteEvent writeEvent) {
         DocumentMetadataHandle metadata = (DocumentMetadataHandle) writeEvent.getMetadata();
         String flowFileUUID = metadata.getMetadataValues().get("flowFileUUID");
-        FlowFileInfo flowFile = uriFlowFileMap.get(flowFileUUID);
+        return uriFlowFileMap.get(flowFileUUID);
+    }
+
+    private void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
+        FlowFileInfo flowFile = getFlowFileInfoForWriteEvent(writeEvent);
         if(flowFile != null) {
             synchronized(flowFile.session) {
                 flowFile.session.getProvenanceReporter().send(flowFile.flowFile, writeEvent.getTargetUri());
@@ -262,7 +286,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 getLogger().debug("Routing " + writeEvent.getTargetUri() + " to " + relationship.getName());
             }
         }
-        uriFlowFileMap.remove(flowFileUUID);
+        uriFlowFileMap.remove(flowFile.flowFile.getAttribute(CoreAttributes.UUID.key()));
     }
 
     @Override
