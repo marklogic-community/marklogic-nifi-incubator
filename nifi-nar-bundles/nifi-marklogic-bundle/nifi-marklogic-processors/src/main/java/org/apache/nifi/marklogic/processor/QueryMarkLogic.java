@@ -261,8 +261,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
                 }
             });
             if (retrieveMetadata) {
-                exportListener.withMetadataCategory(Metadata.PROPERTIES);
-                exportListener.withMetadataCategory(Metadata.METADATAVALUES);
+                exportListener.withMetadataCategory(Metadata.ALL);
             }
             if (consistentSnapshot) {
                 exportListener.withConsistentSnapshot();
