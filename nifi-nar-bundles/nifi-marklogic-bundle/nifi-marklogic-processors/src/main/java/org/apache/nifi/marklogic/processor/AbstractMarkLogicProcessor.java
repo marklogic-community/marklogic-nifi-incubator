@@ -90,6 +90,10 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
             Pattern.compile("(?i)forbidden", Pattern.CASE_INSENSITIVE);
     private Pattern resourceNotFoundPattern =
             Pattern.compile("(?i)resource not found", Pattern.CASE_INSENSITIVE);
+    private Pattern invalidXMLPattern =
+            Pattern.compile("(?i)XDMP-DOC.*:\\s+xdmp:get-request-body(\"xml\")", Pattern.CASE_INSENSITIVE);
+    private Pattern invalidJSONPattern =
+            Pattern.compile("(?i)XDMP-DOC.*:\\s+xdmp:get-request-body(\"json\")", Pattern.CASE_INSENSITIVE);
 
     @Override
     public void init(final ProcessorInitializationContext context) {
@@ -177,13 +181,17 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
             statusMsg = "";
         }
         if (t instanceof UnauthorizedUserException || statusMsg.matches(unauthorizedPattern.pattern())) {
-            getLogger().error("{} failed! Verfiy your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, t});
         } else if (t instanceof ForbiddenUserException || statusMsg.matches(forbiddenPattern.pattern())) {
-            getLogger().error("{} failed! Verfiy your users has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your user has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, t});
         } else if (t instanceof ResourceNotFoundException || statusMsg.matches(resourceNotFoundPattern.pattern())) {
             getLogger().error("{} failed due to 'Resource Not Found'! " +
-                    "Verifiy you're pointing a MarkLogic REST instance and referenced extensions/transforms are installed. "+
+                    "Verify you're pointing a MarkLogic REST instance and referenced extensions/transforms are installed. "+
                     "Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else if (statusMsg.matches(invalidXMLPattern.pattern())) {
+            getLogger().error("{} failed! Expected valid XML payload! Throwable exception {}; rolling back session", new Object[]{this, t});
+        } else if (statusMsg.matches(invalidJSONPattern.pattern())) {
+            getLogger().error("{} failed! Expected valid JSON payload! Throwable exception {}; rolling back session", new Object[]{this, t});
         } else if (t instanceof MarkLogicBindingException) {
             getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, t});
         } else {
