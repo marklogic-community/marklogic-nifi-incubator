@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
 import org.apache.nifi.annotation.behavior.SystemResource;
@@ -74,6 +75,10 @@ import com.marklogic.client.query.StructuredQueryDefinition;
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
 @CapabilityDescription("Creates FlowFiles from batches of documents, matching the given criteria,"
         + " retrieved from a MarkLogic server using the MarkLogic Data Movement SDK (DMSDK)")
+@DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
+description = "Adds server transform parameters to be passed to the server transform specified. "
++ "Server transform parameter name should start with the string 'trans:'.",
+expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @WritesAttributes({
         @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document retrieved from MarkLogic") })
 public class QueryMarkLogic extends AbstractMarkLogicProcessor {
@@ -117,6 +122,17 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
             .build();
 
     private QueryBatcher queryBatcher;
+
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+        return new PropertyDescriptor.Builder()
+            .name(propertyDescriptorName)
+            .addValidator(Validator.VALID)
+            .dynamic(true)
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
+            .required(false)
+            .build();
+    }
 
     @Override
     public void init(ProcessorInitializationContext context) {
