@@ -70,7 +70,8 @@ import java.util.stream.Stream;
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
 @DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
     description = "Adds server transform parameters to be passed to the server transform specified. "
-    + "Server transform parameter name should start with the string 'trans:'.")
+    + "Server transform parameter name should start with the string 'trans:'.",
+    expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
 @WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
 public class PutMarkLogic extends AbstractMarkLogicProcessor {
@@ -200,6 +201,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             .name(propertyDescriptorName)
             .addValidator(Validator.VALID)
             .dynamic(true)
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
             .required(false)
             .build();
     }
