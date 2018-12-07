@@ -16,18 +16,7 @@
  */
 package org.apache.nifi.marklogic.processor;
 
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
-import com.marklogic.client.datamovement.DataMovementManager;
-import com.marklogic.client.datamovement.DeleteListener;
-import com.marklogic.client.datamovement.QueryBatcher;
-import com.marklogic.client.query.StructuredQueryBuilder;
-import com.marklogic.client.query.StructuredQueryDefinition;
-import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
-import org.apache.nifi.marklogic.controller.DefaultMarkLogicDatabaseClientService;
-import org.apache.nifi.reporting.InitializationException;
-import org.apache.nifi.util.TestRunner;
-import org.apache.nifi.util.TestRunners;
+import static junit.framework.TestCase.assertTrue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +24,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static junit.framework.TestCase.assertTrue;
+import org.apache.nifi.marklogic.controller.DefaultMarkLogicDatabaseClientService;
+import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
+import org.apache.nifi.reporting.InitializationException;
+import org.apache.nifi.util.TestRunner;
+import org.apache.nifi.util.TestRunners;
+
+import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.DeleteListener;
+import com.marklogic.client.datamovement.QueryBatcher;
+import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.client.query.StructuredQueryDefinition;
 
 public class AbstractMarkLogicIT {
     protected String hostName = "localhost";
@@ -49,6 +50,20 @@ public class AbstractMarkLogicIT {
     protected String threadCount = "3";
     protected String databaseClientServiceIdentifier = "databaseClientService";
     protected int numDocs = 30;
+
+    protected int xmlMod = 5;
+    protected int jsonMod = 3;
+    protected int txtMod = 7;
+
+    // mod  xmlMod == 0 docs are XML
+    protected int expectedXmlCount = (int) (Math.ceil((numDocs - 1.0) / xmlMod));
+    // mod jsonMod == 0 docs are JSON, but mod xmlMod == 0 docs are XML and take precedence in doc generation
+    protected int expectedJsonCount = (int) (Math.ceil((numDocs - 1.0) / jsonMod) - Math.ceil((numDocs - 1.0) / (xmlMod * jsonMod)));
+    // mod txtMod == 0 docs are Text, but mod xmlMod == 0 docs are XML and mod jsonMod == 0 docs are JSON and both take precedence in doc generation
+    protected int expectedTxtCount = (int) (Math.ceil((numDocs - 1.0) / txtMod) - Math.ceil((numDocs - 1.0) / (txtMod * jsonMod)) - Math.ceil((numDocs - 1.0) / (txtMod * xmlMod)));
+    // binary documents make up the remainder
+    protected int expectedBinCount = numDocs - (expectedXmlCount + expectedJsonCount + expectedTxtCount);
+
     protected DatabaseClient client;
     protected DataMovementManager dataMovementManager;
 
@@ -90,13 +105,13 @@ public class AbstractMarkLogicIT {
         for(int i = 0; i < numDocs; i++) {
             String fileName = "/PutMarkLogicTest/";
             String content = "";
-            if(i % 5 == 0) {
+            if(i % xmlMod == 0) {
                 fileName += i + ".xml";
                 content = "<sample>xmlcontent</sample>";
-            } else if ( i % 3 == 0) {
+            } else if ( i % jsonMod == 0) {
                 fileName += i + ".json";
                 content = "{\"sample\":\"jsoncontent\"}";
-            } else if (i % 7 == 0) {
+            } else if (i % txtMod == 0) {
                 fileName += i + ".txt";
                 content = "A sample text document";
             } else {

@@ -28,9 +28,11 @@ import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
 import org.apache.nifi.annotation.behavior.TriggerWhenEmpty;
+import org.apache.nifi.annotation.behavior.WritesAttribute;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.annotation.lifecycle.OnScheduled;
+import org.apache.nifi.annotation.lifecycle.OnShutdown;
 import org.apache.nifi.annotation.lifecycle.OnStopped;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.PropertyValue;
@@ -49,11 +51,13 @@ import org.apache.nifi.stream.io.StreamUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
@@ -66,8 +70,10 @@ import java.util.Set;
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
 @DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
     description = "Adds server transform parameters to be passed to the server transform specified. "
-    + "Server transform parameter name should start with the string 'trans:'.")
+    + "Server transform parameter name should start with the string 'trans:'.",
+    expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
+@WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
 public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     class FlowFileInfo {
@@ -78,7 +84,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             this.session = session;
         }
     }
-    private Map<String, FlowFileInfo> uriFlowFileMap = new HashMap<>();
+    private static final Map<String, FlowFileInfo> uriFlowFileMap = new ConcurrentHashMap<>();
     public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder()
         .name("Collections")
         .displayName("Collections")
@@ -141,15 +147,6 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .required(false)
         .build();
 
-    public static final PropertyDescriptor TRANSFORM = new PropertyDescriptor.Builder()
-        .name("Server Transform")
-        .displayName("Server Transform")
-        .description("The name of REST server transform to apply to every document as it's" +
-            " written")
-        .addValidator(Validator.VALID)
-        .required(false)
-        .build();
-
     public static final PropertyDescriptor URI_ATTRIBUTE_NAME = new PropertyDescriptor.Builder()
         .name("URI Attribute Name")
         .displayName("URI Attribute Name")
@@ -173,6 +170,11 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .description("The suffix to append to each URI")
         .required(false)
         .addValidator(Validator.VALID)
+        .build();
+
+    protected static final Relationship BATCH_SUCCESS = new Relationship.Builder()
+        .name("batch_success")
+        .description("All successful URIs in a batch passed comma-separated in URIs FlowFile attribute.")
         .build();
 
     protected static final Relationship SUCCESS = new Relationship.Builder()
@@ -199,6 +201,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             .name(propertyDescriptorName)
             .addValidator(Validator.VALID)
             .dynamic(true)
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
             .required(false)
             .build();
     }
@@ -222,6 +225,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         list.add(URI_SUFFIX);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
+        set.add(BATCH_SUCCESS);
         set.add(SUCCESS);
         set.add(FAILURE);
         relationships = Collections.unmodifiableSet(set);
@@ -236,14 +240,8 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             .withBatchSize(context.getProperty(BATCH_SIZE).asInteger())
             .withTemporalCollection(context.getProperty(TEMPORAL_COLLECTION).getValue());
 
-        final String transform = context.getProperty(TRANSFORM).getValue();
-        if (transform != null) {
-            ServerTransform serverTransform = new ServerTransform(transform);
-            final String transformPrefix = "trans:";
-            for (final PropertyDescriptor descriptor : context.getProperties().keySet()) {
-                if (!descriptor.isDynamic() && !descriptor.getName().startsWith(transformPrefix)) continue;
-                serverTransform.addParameter(descriptor.getName().substring(transformPrefix.length()), context.getProperty(descriptor).getValue());
-            }
+        ServerTransform serverTransform = buildServerTransform(context);
+        if (serverTransform != null) {
             writeBatcher.withTransform(serverTransform);
         }
         Integer threadCount = context.getProperty(THREAD_COUNT).asInteger();
@@ -251,8 +249,19 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             writeBatcher.withThreadCount(threadCount);
         }
         this.writeBatcher.onBatchSuccess(writeBatch -> {
-            for(WriteEvent writeEvent : writeBatch.getItems()) {
-                routeDocumentToRelationship(writeEvent, SUCCESS);
+            if (writeBatch.getItems().length > 0) {
+                ProcessSession session = getFlowFileInfoForWriteEvent(writeBatch.getItems()[0]).session;
+                String uriList = Stream.of(writeBatch.getItems()).map((item) -> {
+                    return item.getTargetUri();
+                }).collect(Collectors.joining(","));
+                FlowFile batchFlowFile = session.create();
+                session.putAttribute(batchFlowFile, "URIs", uriList);
+                synchronized(session) {
+                    session.transfer(batchFlowFile, BATCH_SUCCESS);
+                }
+                for(WriteEvent writeEvent : writeBatch.getItems()) {
+                    routeDocumentToRelationship(writeEvent, SUCCESS);
+                }
             }
         }).onBatchFailure((writeBatch, throwable) -> {
             for(WriteEvent writeEvent : writeBatch.getItems()) {
@@ -262,31 +271,31 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         dataMovementManager.startJob(writeBatcher);
     }
 
-    private void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
+    private FlowFileInfo getFlowFileInfoForWriteEvent(WriteEvent writeEvent) {
         DocumentMetadataHandle metadata = (DocumentMetadataHandle) writeEvent.getMetadata();
         String flowFileUUID = metadata.getMetadataValues().get("flowFileUUID");
-        FlowFileInfo flowFile = uriFlowFileMap.get(flowFileUUID);
+        return uriFlowFileMap.get(flowFileUUID);
+    }
+
+    private void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
+        FlowFileInfo flowFile = getFlowFileInfoForWriteEvent(writeEvent);
         if(flowFile != null) {
-            flowFile.session.getProvenanceReporter().send(flowFile.flowFile, writeEvent.getTargetUri());
-            flowFile.session.transfer(flowFile.flowFile, relationship);
-            flowFile.session.commit();
+            synchronized(flowFile.session) {
+                flowFile.session.getProvenanceReporter().send(flowFile.flowFile, writeEvent.getTargetUri());
+                flowFile.session.transfer(flowFile.flowFile, relationship);
+                flowFile.session.commit();
+            }
             if (getLogger().isDebugEnabled()) {
                 getLogger().debug("Routing " + writeEvent.getTargetUri() + " to " + relationship.getName());
             }
         }
-        uriFlowFileMap.remove(flowFileUUID);
+        uriFlowFileMap.remove(flowFile.flowFile.getAttribute(CoreAttributes.UUID.key()));
     }
 
     @Override
     public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory) throws ProcessException {
         final ProcessSession session = sessionFactory.createSession();
-        try {
-            onTrigger(context, session);
-        } catch (final Throwable t) {
-            getLogger().error("{} failed to process due to {}; rolling back session", new Object[]{this, t});
-            session.rollback(true);
-            throw new ProcessException(t);
-        }
+        onTrigger(context, session);
     }
     /**
      * When a FlowFile is received, hand it off to the WriteBatcher so it can be written to MarkLogic.
@@ -299,21 +308,26 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
      *
      */
     public void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
-        FlowFile flowFile = session.get();
-        if (flowFile == null) {
-            context.yield();
-            if (shouldFlushIfEmpty) {
-                flushWriteBatcherAsync(this.writeBatcher);
-            }
-            shouldFlushIfEmpty = false;
-        } else {
-            shouldFlushIfEmpty = true;
+        try {
+            FlowFile flowFile = session.get();
+            if (flowFile == null) {
+                if (shouldFlushIfEmpty) {
+                    flushWriteBatcherAsync(this.writeBatcher);
+                }
+                shouldFlushIfEmpty = false;
+                context.yield();
+            } else {
+                shouldFlushIfEmpty = true;
 
-            WriteEvent writeEvent = buildWriteEvent(context, session, flowFile);
-            if (getLogger().isDebugEnabled()) {
-                getLogger().debug("Writing URI: " + writeEvent.getTargetUri());
+                WriteEvent writeEvent = buildWriteEvent(context, session, flowFile);
+                if (getLogger().isDebugEnabled()) {
+                    getLogger().debug("Writing URI: " + writeEvent.getTargetUri());
+                }
+                addWriteEvent(this.writeBatcher, writeEvent);
             }
-            addWriteEvent(this.writeBatcher, writeEvent);
+        } catch (final Throwable t) {
+            session.rollback(true);
+            this.handleThrowable(t);
         }
     }
 
@@ -354,7 +368,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
         // getArrayFromCommaSeparatedString checks to see if collectionsValue is empty or null.
         // If collectionsValue is empty or NULL, collections would be NULL. So, no need to check if
-        // collectionsValue is emopty or null again here
+        // collectionsValue is empty or null again here
         if (collections != null && !collectionsValue.startsWith("${") && !collectionsValue.endsWith("}")) {
             metadata.withCollections(collections);
         }
@@ -418,6 +432,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         }
     }
 
+    @OnShutdown
     @OnStopped
     public void completeWriteBatcherJob() {
         if (writeBatcher != null) {

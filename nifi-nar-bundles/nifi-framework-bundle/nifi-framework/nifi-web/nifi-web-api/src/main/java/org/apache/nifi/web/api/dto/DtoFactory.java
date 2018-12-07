@@ -88,7 +88,11 @@ import org.apache.nifi.controller.queue.FlowFileQueue;
 import org.apache.nifi.controller.queue.FlowFileSummary;
 import org.apache.nifi.controller.queue.ListFlowFileState;
 import org.apache.nifi.controller.queue.ListFlowFileStatus;
+import org.apache.nifi.controller.queue.LoadBalanceStrategy;
+import org.apache.nifi.controller.queue.LocalQueuePartitionDiagnostics;
+import org.apache.nifi.controller.queue.QueueDiagnostics;
 import org.apache.nifi.controller.queue.QueueSize;
+import org.apache.nifi.controller.queue.RemoteQueuePartitionDiagnostics;
 import org.apache.nifi.controller.repository.FlowFileRecord;
 import org.apache.nifi.controller.repository.claim.ContentClaim;
 import org.apache.nifi.controller.repository.claim.ResourceClaim;
@@ -114,7 +118,7 @@ import org.apache.nifi.groups.RemoteProcessGroup;
 import org.apache.nifi.groups.RemoteProcessGroupCounts;
 import org.apache.nifi.history.History;
 import org.apache.nifi.nar.ExtensionManager;
-import org.apache.nifi.nar.NarClassLoaders;
+import org.apache.nifi.nar.NarClassLoadersHolder;
 import org.apache.nifi.processor.Processor;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.provenance.lineage.ComputeLineageResult;
@@ -165,6 +169,7 @@ import org.apache.nifi.web.api.dto.action.details.MoveDetailsDTO;
 import org.apache.nifi.web.api.dto.action.details.PurgeDetailsDTO;
 import org.apache.nifi.web.api.dto.diagnostics.ClassLoaderDiagnosticsDTO;
 import org.apache.nifi.web.api.dto.diagnostics.ConnectionDiagnosticsDTO;
+import org.apache.nifi.web.api.dto.diagnostics.ConnectionDiagnosticsSnapshotDTO;
 import org.apache.nifi.web.api.dto.diagnostics.ControllerServiceDiagnosticsDTO;
 import org.apache.nifi.web.api.dto.diagnostics.GCDiagnosticsSnapshotDTO;
 import org.apache.nifi.web.api.dto.diagnostics.GarbageCollectionDiagnosticsDTO;
@@ -173,7 +178,9 @@ import org.apache.nifi.web.api.dto.diagnostics.JVMDiagnosticsDTO;
 import org.apache.nifi.web.api.dto.diagnostics.JVMDiagnosticsSnapshotDTO;
 import org.apache.nifi.web.api.dto.diagnostics.JVMFlowDiagnosticsSnapshotDTO;
 import org.apache.nifi.web.api.dto.diagnostics.JVMSystemDiagnosticsSnapshotDTO;
+import org.apache.nifi.web.api.dto.diagnostics.LocalQueuePartitionDTO;
 import org.apache.nifi.web.api.dto.diagnostics.ProcessorDiagnosticsDTO;
+import org.apache.nifi.web.api.dto.diagnostics.RemoteQueuePartitionDTO;
 import org.apache.nifi.web.api.dto.diagnostics.RepositoryUsageDTO;
 import org.apache.nifi.web.api.dto.diagnostics.ThreadDumpDTO;
 import org.apache.nifi.web.api.dto.flow.FlowBreadcrumbDTO;
@@ -258,6 +265,7 @@ public final class DtoFactory {
     private ControllerServiceProvider controllerServiceProvider;
     private EntityFactory entityFactory;
     private Authorizer authorizer;
+    private ExtensionManager extensionManager;
 
     public ControllerConfigurationDTO createControllerConfigurationDto(final ControllerFacade controllerFacade) {
         final ControllerConfigurationDTO dto = new ControllerConfigurationDTO();
@@ -669,11 +677,13 @@ public final class DtoFactory {
         dto.setDestination(createConnectableDto(connection.getDestination()));
         dto.setVersionedComponentId(connection.getVersionedComponentId().orElse(null));
 
-        dto.setBackPressureObjectThreshold(connection.getFlowFileQueue().getBackPressureObjectThreshold());
-        dto.setBackPressureDataSizeThreshold(connection.getFlowFileQueue().getBackPressureDataSizeThreshold());
-        dto.setFlowFileExpiration(connection.getFlowFileQueue().getFlowFileExpiration());
+        final FlowFileQueue flowFileQueue = connection.getFlowFileQueue();
+
+        dto.setBackPressureObjectThreshold(flowFileQueue.getBackPressureObjectThreshold());
+        dto.setBackPressureDataSizeThreshold(flowFileQueue.getBackPressureDataSizeThreshold());
+        dto.setFlowFileExpiration(flowFileQueue.getFlowFileExpiration());
         dto.setPrioritizers(new ArrayList<String>());
-        for (final FlowFilePrioritizer comparator : connection.getFlowFileQueue().getPriorities()) {
+        for (final FlowFilePrioritizer comparator : flowFileQueue.getPriorities()) {
             dto.getPrioritizers().add(comparator.getClass().getCanonicalName());
         }
 
@@ -697,6 +707,19 @@ public final class DtoFactory {
 
                 dto.getAvailableRelationships().add(availableRelationship.getName());
             }
+        }
+
+        final LoadBalanceStrategy loadBalanceStrategy = flowFileQueue.getLoadBalanceStrategy();
+        dto.setLoadBalancePartitionAttribute(flowFileQueue.getPartitioningAttribute());
+        dto.setLoadBalanceStrategy(loadBalanceStrategy.name());
+        dto.setLoadBalanceCompression(flowFileQueue.getLoadBalanceCompression().name());
+
+        if (loadBalanceStrategy == LoadBalanceStrategy.DO_NOT_LOAD_BALANCE) {
+            dto.setLoadBalanceStatus(ConnectionDTO.LOAD_BALANCE_NOT_CONFIGURED);
+        } else if (flowFileQueue.isActivelyLoadBalancing()) {
+            dto.setLoadBalanceStatus(ConnectionDTO.LOAD_BALANCE_ACTIVE);
+        } else {
+            dto.setLoadBalanceStatus(ConnectionDTO.LOAD_BALANCE_INACTIVE);
         }
 
         return dto;
@@ -1324,7 +1347,7 @@ public final class DtoFactory {
 
     public ReportingTaskDTO createReportingTaskDto(final ReportingTaskNode reportingTaskNode) {
         final BundleCoordinate bundleCoordinate = reportingTaskNode.getBundleCoordinate();
-        final List<Bundle> compatibleBundles = ExtensionManager.getBundles(reportingTaskNode.getCanonicalClassName()).stream().filter(bundle -> {
+        final List<Bundle> compatibleBundles = extensionManager.getBundles(reportingTaskNode.getCanonicalClassName()).stream().filter(bundle -> {
             final BundleCoordinate coordinate = bundle.getBundleDetails().getCoordinate();
             return bundleCoordinate.getGroup().equals(coordinate.getGroup()) && bundleCoordinate.getId().equals(coordinate.getId());
         }).collect(Collectors.toList());
@@ -1409,7 +1432,7 @@ public final class DtoFactory {
 
     public ControllerServiceDTO createControllerServiceDto(final ControllerServiceNode controllerServiceNode) {
         final BundleCoordinate bundleCoordinate = controllerServiceNode.getBundleCoordinate();
-        final List<Bundle> compatibleBundles = ExtensionManager.getBundles(controllerServiceNode.getCanonicalClassName()).stream().filter(bundle -> {
+        final List<Bundle> compatibleBundles = extensionManager.getBundles(controllerServiceNode.getCanonicalClassName()).stream().filter(bundle -> {
             final BundleCoordinate coordinate = bundle.getBundleDetails().getCoordinate();
             return bundleCoordinate.getGroup().equals(coordinate.getGroup()) && bundleCoordinate.getId().equals(coordinate.getId());
         }).collect(Collectors.toList());
@@ -2290,6 +2313,10 @@ public final class DtoFactory {
                 continue;
             }
 
+            if (FlowDifferenceFilters.isIgnorableVersionedFlowCoordinateChange(difference)) {
+                continue;
+            }
+
             final ComponentDifferenceDTO componentDiff = createComponentDifference(difference);
             final List<DifferenceDTO> differences = differencesByComponent.computeIfAbsent(componentDiff, key -> new ArrayList<>());
 
@@ -2701,7 +2728,7 @@ public final class DtoFactory {
 
             final List<ControllerServiceApiDTO> dtos = new ArrayList<>();
             for (final Class serviceApi : serviceApis) {
-                final Bundle bundle = ExtensionManager.getBundle(serviceApi.getClassLoader());
+                final Bundle bundle = extensionManager.getBundle(serviceApi.getClassLoader());
                 final BundleCoordinate bundleCoordinate = bundle.getBundleDetails().getCoordinate();
 
                 final ControllerServiceApiDTO dto = new ControllerServiceApiDTO();
@@ -2772,7 +2799,7 @@ public final class DtoFactory {
     public Set<DocumentedTypeDTO> fromDocumentedTypes(final Set<Class> classes, final String bundleGroupFilter, final String bundleArtifactFilter, final String typeFilter) {
         final Map<Class, Bundle> classBundles = new HashMap<>();
         for (final Class cls : classes) {
-            classBundles.put(cls, ExtensionManager.getBundle(cls.getClassLoader()));
+            classBundles.put(cls, extensionManager.getBundle(cls.getClassLoader()));
         }
         return fromDocumentedTypes(classBundles, bundleGroupFilter, bundleArtifactFilter, typeFilter);
     }
@@ -2789,7 +2816,7 @@ public final class DtoFactory {
         }
 
         final BundleCoordinate bundleCoordinate = node.getBundleCoordinate();
-        final List<Bundle> compatibleBundles = ExtensionManager.getBundles(node.getCanonicalClassName()).stream().filter(bundle -> {
+        final List<Bundle> compatibleBundles = extensionManager.getBundles(node.getCanonicalClassName()).stream().filter(bundle -> {
             final BundleCoordinate coordinate = bundle.getBundleDetails().getCoordinate();
             return bundleCoordinate.getGroup().equals(coordinate.getGroup()) && bundleCoordinate.getId().equals(coordinate.getId());
         }).collect(Collectors.toList());
@@ -3193,7 +3220,7 @@ public final class DtoFactory {
         dto.setOsVersion(System.getProperty("os.version"));
         dto.setOsArchitecture(System.getProperty("os.arch"));
 
-        final Bundle frameworkBundle = NarClassLoaders.getInstance().getFrameworkBundle();
+        final Bundle frameworkBundle = NarClassLoadersHolder.getInstance().getFrameworkBundle();
         if (frameworkBundle != null) {
             final BundleDetails frameworkDetails = frameworkBundle.getBundleDetails();
 
@@ -3249,7 +3276,8 @@ public final class DtoFactory {
         procDiagnostics.setProcessorStatus(createProcessorStatusDto(procStatus));
         procDiagnostics.setThreadDumps(createThreadDumpDtos(procNode));
 
-        final Set<ControllerServiceDiagnosticsDTO> referencedServiceDiagnostics = createReferencedServiceDiagnostics(procNode.getProperties(), flowController, serviceEntityFactory);
+        final Set<ControllerServiceDiagnosticsDTO> referencedServiceDiagnostics = createReferencedServiceDiagnostics(procNode.getProperties(),
+            flowController.getControllerServiceProvider(), serviceEntityFactory);
         procDiagnostics.setReferencedControllerServices(referencedServiceDiagnostics);
 
         return procDiagnostics;
@@ -3266,6 +3294,10 @@ public final class DtoFactory {
             }
 
             final String serviceId = entry.getValue();
+            if (serviceId == null) {
+                continue;
+            }
+
             final ControllerServiceNode serviceNode = serviceProvider.getControllerServiceNode(serviceId);
             if (serviceNode == null) {
                 continue;
@@ -3301,7 +3333,7 @@ public final class DtoFactory {
 
 
     private ClassLoaderDiagnosticsDTO createClassLoaderDiagnosticsDto(final ControllerServiceNode serviceNode) {
-        ClassLoader componentClassLoader = ExtensionManager.getInstanceClassLoader(serviceNode.getIdentifier());
+        ClassLoader componentClassLoader = extensionManager.getInstanceClassLoader(serviceNode.getIdentifier());
         if (componentClassLoader == null) {
             componentClassLoader = serviceNode.getControllerServiceImplementation().getClass().getClassLoader();
         }
@@ -3311,7 +3343,7 @@ public final class DtoFactory {
 
 
     private ClassLoaderDiagnosticsDTO createClassLoaderDiagnosticsDto(final ProcessorNode procNode) {
-        ClassLoader componentClassLoader = ExtensionManager.getInstanceClassLoader(procNode.getIdentifier());
+        ClassLoader componentClassLoader = extensionManager.getInstanceClassLoader(procNode.getIdentifier());
         if (componentClassLoader == null) {
             componentClassLoader = procNode.getProcessor().getClass().getClassLoader();
         }
@@ -3322,7 +3354,7 @@ public final class DtoFactory {
     private ClassLoaderDiagnosticsDTO createClassLoaderDiagnosticsDto(final ClassLoader classLoader) {
         final ClassLoaderDiagnosticsDTO dto = new ClassLoaderDiagnosticsDTO();
 
-        final Bundle bundle = ExtensionManager.getBundle(classLoader);
+        final Bundle bundle = extensionManager.getBundle(classLoader);
         if (bundle != null) {
             dto.setBundle(createBundleDto(bundle.getBundleDetails().getCoordinate()));
         }
@@ -3335,30 +3367,84 @@ public final class DtoFactory {
         return dto;
     }
 
+
     private ConnectionDiagnosticsDTO createConnectionDiagnosticsDto(final Connection connection) {
         final ConnectionDiagnosticsDTO dto = new ConnectionDiagnosticsDTO();
         dto.setConnection(createConnectionDto(connection));
+        dto.setAggregateSnapshot(createConnectionDiagnosticsSnapshotDto(connection));
+        return dto;
+    }
+
+    private ConnectionDiagnosticsSnapshotDTO createConnectionDiagnosticsSnapshotDto(final Connection connection) {
+        final ConnectionDiagnosticsSnapshotDTO dto = new ConnectionDiagnosticsSnapshotDTO();
+
+        final QueueDiagnostics queueDiagnostics = connection.getFlowFileQueue().getQueueDiagnostics();
 
         final FlowFileQueue queue = connection.getFlowFileQueue();
         final QueueSize totalSize = queue.size();
         dto.setTotalByteCount(totalSize.getByteCount());
         dto.setTotalFlowFileCount(totalSize.getObjectCount());
 
-        final QueueSize activeSize = queue.getActiveQueueSize();
+        final LocalQueuePartitionDiagnostics localDiagnostics = queueDiagnostics.getLocalQueuePartitionDiagnostics();
+        dto.setLocalQueuePartition(createLocalQueuePartitionDto(localDiagnostics));
+
+        final List<RemoteQueuePartitionDiagnostics> remoteDiagnostics = queueDiagnostics.getRemoteQueuePartitionDiagnostics();
+        if (remoteDiagnostics != null) {
+            final List<RemoteQueuePartitionDTO> remoteDiagnosticsDtos = remoteDiagnostics.stream()
+                .map(this::createRemoteQueuePartitionDto)
+                .collect(Collectors.toList());
+
+            dto.setRemoteQueuePartitions(remoteDiagnosticsDtos);
+        }
+
+        return dto;
+    }
+
+    private LocalQueuePartitionDTO createLocalQueuePartitionDto(final LocalQueuePartitionDiagnostics queueDiagnostics) {
+        final LocalQueuePartitionDTO dto = new LocalQueuePartitionDTO();
+
+        final QueueSize activeSize = queueDiagnostics.getActiveQueueSize();
         dto.setActiveQueueByteCount(activeSize.getByteCount());
         dto.setActiveQueueFlowFileCount(activeSize.getObjectCount());
 
-        final QueueSize inFlightSize = queue.getUnacknowledgedQueueSize();
+        final QueueSize inFlightSize = queueDiagnostics.getUnacknowledgedQueueSize();
         dto.setInFlightByteCount(inFlightSize.getByteCount());
         dto.setInFlightFlowFileCount(inFlightSize.getObjectCount());
 
-        final QueueSize swapSize = queue.getSwapQueueSize();
+        final QueueSize swapSize = queueDiagnostics.getSwapQueueSize();
         dto.setSwapByteCount(swapSize.getByteCount());
         dto.setSwapFlowFileCount(swapSize.getObjectCount());
+        dto.setSwapFiles(queueDiagnostics.getSwapFileCount());
 
-        dto.setSwapFiles(queue.getSwapFileCount());
-        dto.setAllActiveQueueFlowFilesPenalized(queue.isAllActiveFlowFilesPenalized());
-        dto.setAnyActiveQueueFlowFilesPenalized(queue.isAnyActiveFlowFilePenalized());
+        dto.setTotalByteCount(activeSize.getByteCount() + inFlightSize.getByteCount() + swapSize.getByteCount());
+        dto.setTotalFlowFileCount(activeSize.getObjectCount() + inFlightSize.getObjectCount() + swapSize.getObjectCount());
+
+        dto.setAllActiveQueueFlowFilesPenalized(queueDiagnostics.isAllActiveFlowFilesPenalized());
+        dto.setAnyActiveQueueFlowFilesPenalized(queueDiagnostics.isAnyActiveFlowFilePenalized());
+
+        return dto;
+    }
+
+    private RemoteQueuePartitionDTO createRemoteQueuePartitionDto(final RemoteQueuePartitionDiagnostics queueDiagnostics) {
+        final RemoteQueuePartitionDTO dto = new RemoteQueuePartitionDTO();
+
+        dto.setNodeIdentifier(queueDiagnostics.getNodeIdentifier());
+
+        final QueueSize activeSize = queueDiagnostics.getActiveQueueSize();
+        dto.setActiveQueueByteCount(activeSize.getByteCount());
+        dto.setActiveQueueFlowFileCount(activeSize.getObjectCount());
+
+        final QueueSize inFlightSize = queueDiagnostics.getUnacknowledgedQueueSize();
+        dto.setInFlightByteCount(inFlightSize.getByteCount());
+        dto.setInFlightFlowFileCount(inFlightSize.getObjectCount());
+
+        final QueueSize swapSize = queueDiagnostics.getSwapQueueSize();
+        dto.setSwapByteCount(swapSize.getByteCount());
+        dto.setSwapFlowFileCount(swapSize.getObjectCount());
+        dto.setSwapFiles(queueDiagnostics.getSwapFileCount());
+
+        dto.setTotalByteCount(activeSize.getByteCount() + inFlightSize.getByteCount() + swapSize.getByteCount());
+        dto.setTotalFlowFileCount(activeSize.getObjectCount() + inFlightSize.getObjectCount() + swapSize.getObjectCount());
 
         return dto;
     }
@@ -3385,7 +3471,7 @@ public final class DtoFactory {
         final SystemDiagnostics systemDiagnostics = flowController.getSystemDiagnostics();
 
         // flow-related information
-        final Set<BundleDTO> bundlesLoaded = ExtensionManager.getAllBundles().stream()
+        final Set<BundleDTO> bundlesLoaded = extensionManager.getAllBundles().stream()
             .map(bundle -> bundle.getBundleDetails().getCoordinate())
             .sorted((a, b) -> a.getCoordinate().compareTo(b.getCoordinate()))
             .map(this::createBundleDto)
@@ -3492,6 +3578,8 @@ public final class DtoFactory {
                 snapshotDto.setCollectionMillis(status.getCollectionMillis());
                 gcSnapshots.add(snapshotDto);
             }
+
+            gcSnapshots.sort(Comparator.comparing(GCDiagnosticsSnapshotDTO::getTimestamp).reversed());
 
             final GarbageCollectionDiagnosticsDTO gcDto = new GarbageCollectionDiagnosticsDTO();
             gcDto.setMemoryManagerName(memoryManager);
@@ -3633,7 +3721,7 @@ public final class DtoFactory {
         // set the identifies controller service is applicable
         if (propertyDescriptor.getControllerServiceDefinition() != null) {
             final Class serviceClass = propertyDescriptor.getControllerServiceDefinition();
-            final Bundle serviceBundle = ExtensionManager.getBundle(serviceClass.getClassLoader());
+            final Bundle serviceBundle = extensionManager.getBundle(serviceClass.getClassLoader());
 
             dto.setIdentifiesControllerService(serviceClass.getName());
             dto.setIdentifiesControllerServiceBundle(createBundleDto(serviceBundle.getBundleDetails().getCoordinate()));
@@ -3835,6 +3923,10 @@ public final class DtoFactory {
         copy.setzIndex(original.getzIndex());
         copy.setLabelIndex(original.getLabelIndex());
         copy.setBends(copy(original.getBends()));
+        copy.setLoadBalancePartitionAttribute(original.getLoadBalancePartitionAttribute());
+        copy.setLoadBalanceStrategy(original.getLoadBalanceStrategy());
+        copy.setLoadBalanceCompression(original.getLoadBalanceCompression());
+        copy.setLoadBalanceStatus(original.getLoadBalanceStatus());
         copy.setVersionedComponentId(original.getVersionedComponentId());
 
         return copy;
@@ -4236,5 +4328,9 @@ public final class DtoFactory {
 
     public void setBulletinRepository(BulletinRepository bulletinRepository) {
         this.bulletinRepository = bulletinRepository;
+    }
+
+    public void setExtensionManager(ExtensionManager extensionManager) {
+        this.extensionManager = extensionManager;
     }
 }
