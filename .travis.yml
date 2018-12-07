@@ -55,4 +55,4 @@ script:
   # Note: The reason the sed is done as part of script is to ensure the pom hack 
   # won't affect the 'clean install' above
   - bash .travis.sh
-  - (mvn -T 2C clean install -DskipTests -Ddir-only || true) && cd nifi-nar-bundles/nifi-marklogic-bundle && mvn -T 2C clean install -Pcontrib-check -Ddir-only | grep -v -F -f ../../.travis-output-filters && exit ${PIPESTATUS[0]}
+  - (mvn -T 2C clean install -DskipTests -Ddir-only >/dev/null 2>&1 || true) && cd nifi-nar-bundles/nifi-marklogic-bundle && mvn -T 2C clean install -Pcontrib-check -Ddir-only | grep -v -F -f ../../.travis-output-filters && exit ${PIPESTATUS[0]}
