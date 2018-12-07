@@ -167,13 +167,13 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
     }
 
     @Override
-    public final void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory)
+    public void onTrigger(final ProcessContext context, final ProcessSessionFactory sessionFactory)
             throws ProcessException {
         final ProcessSession session = sessionFactory.createSession();
         onTrigger(context, session);
     }
 
-    public final void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
+    public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
         try {
             FlowFile input = null;
 
