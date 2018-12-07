@@ -249,18 +249,19 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             writeBatcher.withThreadCount(threadCount);
         }
         this.writeBatcher.onBatchSuccess(writeBatch -> {
-            ProcessSession session = getFlowFileInfoForWriteEvent(writeBatch.getItems()[1]).session;
-            synchronized(session) {
+            if (writeBatch.getItems().length > 0) {
+                ProcessSession session = getFlowFileInfoForWriteEvent(writeBatch.getItems()[0]).session;
                 String uriList = Stream.of(writeBatch.getItems()).map((item) -> {
                     return item.getTargetUri();
                 }).collect(Collectors.joining(","));
                 FlowFile batchFlowFile = session.create();
                 session.putAttribute(batchFlowFile, "URIs", uriList);
-                session.transfer(batchFlowFile, BATCH_SUCCESS);
-                session.commit();
-            }
-            for(WriteEvent writeEvent : writeBatch.getItems()) {
-                routeDocumentToRelationship(writeEvent, SUCCESS);
+                synchronized(session) {
+                    session.transfer(batchFlowFile, BATCH_SUCCESS);
+                }
+                for(WriteEvent writeEvent : writeBatch.getItems()) {
+                    routeDocumentToRelationship(writeEvent, SUCCESS);
+                }
             }
         }).onBatchFailure((writeBatch, throwable) -> {
             for(WriteEvent writeEvent : writeBatch.getItems()) {
