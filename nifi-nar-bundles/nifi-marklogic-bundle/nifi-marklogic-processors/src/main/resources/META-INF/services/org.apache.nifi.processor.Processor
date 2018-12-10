@@ -16,3 +16,4 @@
 org.apache.nifi.marklogic.processor.PutMarkLogic
 org.apache.nifi.marklogic.processor.QueryMarkLogic
 org.apache.nifi.marklogic.processor.DeleteMarkLogic
+org.apache.nifi.marklogic.processor.ApplyTransformMarkLogic

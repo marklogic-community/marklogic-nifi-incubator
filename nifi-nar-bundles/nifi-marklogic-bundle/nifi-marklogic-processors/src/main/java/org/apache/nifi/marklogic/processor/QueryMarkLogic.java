@@ -121,7 +121,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
             .description("All FlowFiles that failed to produce a valid query.")
             .build();
 
-    private QueryBatcher queryBatcher;
+    protected QueryBatcher queryBatcher;
 
     @Override
     protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
