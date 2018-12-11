@@ -84,6 +84,7 @@ public class ApplyTransformMarkLogic extends QueryMarkLogic {
         list.add(CONSISTENT_SNAPSHOT);
         list.add(QUERY);
         list.add(QUERY_TYPE);
+        list.add(APPLY_RESULT_TYPE);
         list.add(TRANSFORM);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
