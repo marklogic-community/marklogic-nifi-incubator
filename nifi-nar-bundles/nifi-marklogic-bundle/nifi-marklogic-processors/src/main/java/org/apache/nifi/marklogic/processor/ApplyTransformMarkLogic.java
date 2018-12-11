@@ -78,6 +78,9 @@ public class ApplyTransformMarkLogic extends QueryMarkLogic {
     public void init(ProcessorInitializationContext context) {
         super.init(context);
         List<PropertyDescriptor> list = new ArrayList<>();
+        list.add(DATABASE_CLIENT_SERVICE);
+        list.add(BATCH_SIZE);
+        list.add(THREAD_COUNT);
         list.add(CONSISTENT_SNAPSHOT);
         list.add(QUERY);
         list.add(QUERY_TYPE);
