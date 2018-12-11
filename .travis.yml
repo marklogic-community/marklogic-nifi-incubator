@@ -48,7 +48,7 @@ before_install:
   # Remove nifi repo again to save travis from caching it
   - rm -rf $HOME/.m2/repository/org/apache/nifi/
 
-install: false
+install: true
     
 script:
   # Replace variables seems to be the only option to pass proper values to surefire

@@ -52,10 +52,19 @@ import com.marklogic.client.datamovement.QueryBatchListener;
 @WritesAttributes({
         @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document deleted from MarkLogic") })
 public class DeleteMarkLogic extends QueryMarkLogic {
+
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+        return null;
+    }
+
     @Override
     public void init(ProcessorInitializationContext context) {
         super.init(context);
-        List<PropertyDescriptor> list = new ArrayList<>(properties);
+        List<PropertyDescriptor> list = new ArrayList<>();
+        list.add(DATABASE_CLIENT_SERVICE);
+        list.add(BATCH_SIZE);
+        list.add(THREAD_COUNT);
         list.add(QUERY);
         list.add(QUERY_TYPE);
         properties = Collections.unmodifiableList(list);
@@ -76,7 +85,18 @@ public class DeleteMarkLogic extends QueryMarkLogic {
     }
 
     protected QueryBatchListener buildQueryBatchListener(final ProcessContext context, final ProcessSession session, final boolean consistentSnapshot) {
-        return new NiFiDeleteListener(session);
+        return new NiFiDeleteListener(session).onFailure((batch, throwable) -> {
+            synchronized(session) {
+                getLogger().error("Error deleting batch", throwable);
+                for (String uri : batch.getItems()) {
+                    FlowFile flowFile = session.create();
+                    session.putAttribute(flowFile, CoreAttributes.FILENAME.key(), uri);
+                    session.transfer(flowFile, FAILURE);
+                }
+                session.commit();
+                context.yield();
+            }
+        });
     }
 
     private class NiFiDeleteListener extends DeleteListener {
