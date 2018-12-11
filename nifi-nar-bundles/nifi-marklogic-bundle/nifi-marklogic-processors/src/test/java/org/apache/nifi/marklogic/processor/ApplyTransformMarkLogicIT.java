@@ -1,3 +1,19 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.apache.nifi.marklogic.processor;
 
 import static org.junit.Assert.assertEquals;
@@ -35,19 +51,19 @@ public class ApplyTransformMarkLogicIT extends AbstractMarkLogicIT {
             .newTransformExtensionsManager()
             .writeXSLTransform(
                 "AddAttribute",
-                new StringHandle().with("<xsl:stylesheet version=\"2.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\n" + 
-                        "    xmlns:example=\"http://marklogic.com/rest-api/example/transform\"\n" + 
-                        "    xmlns:map=\"http://marklogic.com/xdmp/map\">\n" + 
-                        "<xsl:param name=\"context\" as=\"map:map\"/>\n" + 
-                        "<xsl:param name=\"params\"  as=\"map:map\"/>\n" + 
-                        "<xsl:template match=\"/*\">\n" + 
-                        "    <xsl:copy>\n" + 
-                        "        <xsl:attribute name='{(map:get($params,\"name\"),\"transformed\")[1]}'\n" + 
-                        "            select='(map:get($params,\"value\"),\"UNDEFINED\")[1]'/>\n" + 
-                        "        <xsl:copy-of select=\"@*\"/>\n" + 
-                        "        <xsl:copy-of select=\"node()\"/>\n" + 
-                        "    </xsl:copy>\n" + 
-                        "</xsl:template>\n" + 
+                new StringHandle().with("<xsl:stylesheet version=\"2.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\"\n" +
+                        "    xmlns:example=\"http://marklogic.com/rest-api/example/transform\"\n" +
+                        "    xmlns:map=\"http://marklogic.com/xdmp/map\">\n" +
+                        "<xsl:param name=\"context\" as=\"map:map\"/>\n" +
+                        "<xsl:param name=\"params\"  as=\"map:map\"/>\n" +
+                        "<xsl:template match=\"/*\">\n" +
+                        "    <xsl:copy>\n" +
+                        "        <xsl:attribute name='{(map:get($params,\"name\"),\"transformed\")[1]}'\n" +
+                        "            select='(map:get($params,\"value\"),\"UNDEFINED\")[1]'/>\n" +
+                        "        <xsl:copy-of select=\"@*\"/>\n" +
+                        "        <xsl:copy-of select=\"node()\"/>\n" +
+                        "    </xsl:copy>\n" +
+                        "</xsl:template>\n" +
                         "</xsl:stylesheet>")
             );
     }

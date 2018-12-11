@@ -33,6 +33,7 @@ import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.Validator;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
@@ -62,7 +63,16 @@ public class ApplyTransformMarkLogic extends QueryMarkLogic {
             .name("Apply Result Type").displayName("Apply Result Type").defaultValue(ApplyResultTypes.REPLACE.getValue())
             .description("Whether to REPLACE each document with the result of the transform, or run the transform with each document as input, but IGNORE the result.").required(true)
             .allowableValues(ApplyResultTypes.allValues)
-            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
+            .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+            .required(true)
+            .build();
+    public static final PropertyDescriptor TRANSFORM = new PropertyDescriptor.Builder()
+            .name("Server Transform")
+            .displayName("Server Transform")
+            .description("The name of REST server transform to apply to every document")
+            .addValidator(Validator.VALID)
+            .required(true)
+            .build();
 
     @Override
     public void init(ProcessorInitializationContext context) {
@@ -82,7 +92,7 @@ public class ApplyTransformMarkLogic extends QueryMarkLogic {
     protected QueryBatchListener buildQueryBatchListener(final ProcessContext context, final ProcessSession session, final boolean consistentSnapshot) {
         ApplyTransformListener applyTransform = new ApplyTransformListener()
             .withApplyResult(
-                ApplyResultTypes.INGORE_STR.equals(context.getProperty(APPLY_RESULT_TYPE).getValue()) ? ApplyResult.IGNORE : ApplyResult.REPLACE 
+                ApplyResultTypes.INGORE_STR.equals(context.getProperty(APPLY_RESULT_TYPE).getValue()) ? ApplyResult.IGNORE : ApplyResult.REPLACE
             )
             .withTransform(this.buildServerTransform(context))
             .onSuccess((batch) -> {
