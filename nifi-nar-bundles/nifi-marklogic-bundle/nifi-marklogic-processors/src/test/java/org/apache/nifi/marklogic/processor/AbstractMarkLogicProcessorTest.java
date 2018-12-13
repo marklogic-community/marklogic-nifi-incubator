@@ -69,8 +69,9 @@ public class AbstractMarkLogicProcessorTest extends Assert {
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.PASSWORD, password);
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.SECURITY_CONTEXT_TYPE, MarkLogicTestConfig.authentication);
     }
-    protected MockFlowFile addFlowFile(String content) {
-        MockFlowFile flowFile = processSession.createFlowFile(content.getBytes());
+
+    protected MockFlowFile addFlowFile(String... contents) {
+        MockFlowFile flowFile = processSession.createFlowFile(String.join("\n", contents).getBytes());
         sharedSessionState.getFlowFileQueue().offer(flowFile);
         return flowFile;
     }
