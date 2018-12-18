@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
+import org.apache.nifi.annotation.behavior.Stateful;
 import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
@@ -31,6 +32,7 @@ import org.apache.nifi.annotation.behavior.WritesAttributes;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.processor.ProcessContext;
@@ -51,6 +53,7 @@ import com.marklogic.client.datamovement.QueryBatchListener;
         + " deleted from a MarkLogic server using the MarkLogic Data Movement SDK (DMSDK)")
 @WritesAttributes({
         @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document deleted from MarkLogic") })
+@Stateful(description = "Can keep state of a range index value to restrict future queries.", scopes = { Scope.CLUSTER })
 public class DeleteMarkLogic extends QueryMarkLogic {
 
     @Override
@@ -67,6 +70,8 @@ public class DeleteMarkLogic extends QueryMarkLogic {
         list.add(THREAD_COUNT);
         list.add(QUERY);
         list.add(QUERY_TYPE);
+        list.add(STATE_INDEX);
+        list.add(STATE_INDEX_TYPE);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
         set.add(SUCCESS);

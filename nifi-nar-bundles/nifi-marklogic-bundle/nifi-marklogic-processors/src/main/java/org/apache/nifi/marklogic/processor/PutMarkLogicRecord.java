@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
 
@@ -69,9 +68,10 @@ import com.marklogic.client.io.Format;
 @CapabilityDescription("Breaks down FlowFiles into batches of Records and inserts JSON documents to a MarkLogic server using the " +
         "MarkLogic Data Movement SDK (DMSDK)")
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
-@DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
-    description = "Adds server transform parameters to be passed to the server transform specified. "
-        + "Server transform parameter name should start with the string 'trans:'.")
+@DynamicProperty(name = "trans: Server transform parameter name, property: Property name to add, meta: Metadata name to add",
+    value = "trans: Value of the server transform parameter, property: Property value to add, meta: Metadata value to add",
+    description = "Depending on the property prefix, routes data to transform, metadata, or property.",
+    expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
 public class PutMarkLogicRecord extends PutMarkLogic {
     static final PropertyDescriptor RECORD_READER = new PropertyDescriptor.Builder()
@@ -220,10 +220,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
         }
         uri.replaceAll("//", "/");
 
-        DocumentMetadataHandle metadata = buildMetadataHandle(flowFile, context.getProperty(COLLECTIONS), context.getProperty(PERMISSIONS));
-        for (Entry<String, String> entry:additionalAttributes.entrySet()) {
-            metadata.withMetadataValue(entry.getKey(), entry.getValue());
-        }
+        DocumentMetadataHandle metadata = buildMetadataHandle(context, flowFile, context.getProperty(COLLECTIONS), context.getProperty(PERMISSIONS));
         // Add the flow file UUID for Provenance purposes and for sending them
         // to the appropriate relationship
         String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());

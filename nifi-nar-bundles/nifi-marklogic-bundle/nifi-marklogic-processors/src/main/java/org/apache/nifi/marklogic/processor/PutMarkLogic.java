@@ -69,9 +69,9 @@ import com.marklogic.client.io.Format;
 @CapabilityDescription("Write batches of FlowFiles as documents to a MarkLogic server using the " +
     "MarkLogic Data Movement SDK (DMSDK)")
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
-@DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
-    description = "Adds server transform parameters to be passed to the server transform specified. "
-    + "Server transform parameter name should start with the string 'trans:'.",
+@DynamicProperty(name = "trans: Server transform parameter name, property: Property name to add, meta: Metadata name to add",
+    value = "trans: Value of the server transform parameter, property: Property value to add, meta: Metadata value to add",
+    description = "Depending on the property prefix, routes data to transform, metadata, or property.",
     expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
 @WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
@@ -195,17 +195,6 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
     // If no FlowFile exists when this processor is triggered, this variable determines whether or not a call is made to
     // flush the WriteBatcher
     private volatile boolean shouldFlushIfEmpty = true;
-
-    @Override
-    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
-        return new PropertyDescriptor.Builder()
-            .name(propertyDescriptorName)
-            .addValidator(Validator.VALID)
-            .dynamic(true)
-            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
-            .required(false)
-            .build();
-    }
 
     @Override
     public void init(ProcessorInitializationContext context) {
@@ -357,7 +346,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             uri += suffix;
         }
 
-        DocumentMetadataHandle metadata = buildMetadataHandle(flowFile, context.getProperty(COLLECTIONS), context.getProperty(PERMISSIONS));
+        DocumentMetadataHandle metadata = buildMetadataHandle(context, flowFile, context.getProperty(COLLECTIONS), context.getProperty(PERMISSIONS));
         final byte[] content = new byte[(int) flowFile.getSize()];
         session.read(flowFile, inputStream -> StreamUtils.fillBuffer(inputStream, content));
 
@@ -384,6 +373,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
     }
 
     protected DocumentMetadataHandle buildMetadataHandle(
+        final ProcessContext context,
         final FlowFile flowFile,
         final PropertyValue collectionProperty,
         final PropertyValue permissionsProperty
@@ -411,6 +401,23 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         // Add the flow file UUID for Provenance purposes and for sending them
         // to the appropriate relationship
         metadata.withMetadataValue("flowFileUUID", flowFileUUID);
+
+        // Set dynamic meta
+        String metaPrefix = "meta";
+        List<PropertyDescriptor> metaProperties = propertiesByPrefix.get(metaPrefix);
+        if (metaProperties != null) {
+            for (final PropertyDescriptor propertyDesc: metaProperties) {
+                metadata.withMetadataValue(propertyDesc.getName().substring(metaPrefix.length() + 1), context.getProperty(propertyDesc).evaluateAttributeExpressions(flowFile).getValue());
+            }
+        }
+        // Set dynamic properties
+        String propertyPrefix = "property";
+        List<PropertyDescriptor> propertyProperties = propertiesByPrefix.get(propertyPrefix);
+        if (propertyProperties != null) {
+            for (final PropertyDescriptor propertyDesc: propertiesByPrefix.get(propertyPrefix)) {
+                metadata.withProperty(propertyDesc.getName().substring(propertyPrefix.length() + 1), context.getProperty(propertyDesc).evaluateAttributeExpressions(flowFile).getValue());
+            }
+        }
 
         return metadata;
     }
