@@ -86,7 +86,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
     static final PropertyDescriptor RECORD_WRITER = new PropertyDescriptor.Builder()
             .name("record-writer")
             .displayName("Record Writer")
-            .description("The Record Writer to use in order to serialize the data before sending to Kafka")
+            .description("The Record Writer to use in order to serialize the data before sending to MarkLogic")
             .identifiesControllerService(RecordSetWriterFactory.class)
             .expressionLanguageSupported(ExpressionLanguageScope.NONE)
             .required(true)
