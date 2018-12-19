@@ -179,7 +179,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
                         : "MarkLogic cluster";
                 writeBatcher.flushAndWait();
                 session.getProvenanceReporter().send(flowFile, url, String.format("Added %d documents to MarkLogic.", added));
-                session.transfer(flowFile, SUCCESS);
+                session.transfer(flowFile, ORIGINAL);
                 uriFlowFileMap.remove(flowFile.getAttribute(CoreAttributes.UUID.key()));
                 getLogger().info("Inserted {} records into MarkLogic", new Object[]{ added });
             }
