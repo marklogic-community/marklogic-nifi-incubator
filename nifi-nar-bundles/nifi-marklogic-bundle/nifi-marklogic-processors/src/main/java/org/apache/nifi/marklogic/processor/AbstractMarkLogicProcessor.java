@@ -134,7 +134,7 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
     protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
         String[] parts = propertyDescriptorName.split(":", 2);
         String prefix = parts[0];
-        String postfix = (parts.length > 1) ? propertyDescriptorName.split(":", 2)[1] : "";
+        String postfix = (parts.length > 1) ? parts[1] : "";
         String description;
 
         switch(prefix) {
@@ -206,20 +206,6 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
     public static abstract class AllowableValuesSet {
         public static AllowableValue[] allValues;
 
-        public static AllowableValue[] values() {
-            return allValues;
-        }
-
-        public static AllowableValue valueOf(String valueString) {
-            AllowableValue value = null;
-            for (int i = 0; i < allValues.length; i++) {
-                if (allValues[i].getValue().equals(valueString)) {
-                    value = allValues[i];
-                    break;
-                }
-            }
-            return value;
-        }
     }
 
     protected void handleThrowable(final Throwable t) {

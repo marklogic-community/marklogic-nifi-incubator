@@ -287,7 +287,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
         JsonObject rangeObject = new JsonObject();
         constraintObject.add("range", rangeObject);
         rangeObject.addProperty("type", "xs:dateTime");
-        String stateIndexTypeValue = context.getProperty(STATE_INDEX_TYPE).evaluateAttributeExpressions().getValue();
+        String stateIndexTypeValue = context.getProperty(STATE_INDEX_TYPE).getValue();
         String stateIndexValue = context.getProperty(STATE_INDEX).evaluateAttributeExpressions(flowFile).getValue();
         switch (stateIndexTypeValue) {
         case IndexTypes.ELEMENT_STR:
@@ -570,7 +570,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
     RangeIndexQuery buildStateQuery(StructuredQueryBuilder queryBuilder, final ProcessContext context,
             final FlowFile flowFile) {
         String stateIndexValue = context.getProperty(STATE_INDEX).evaluateAttributeExpressions(flowFile).getValue();
-        String stateIndexTypeValue = context.getProperty(STATE_INDEX_TYPE).evaluateAttributeExpressions(flowFile).getValue();
+        String stateIndexTypeValue = context.getProperty(STATE_INDEX_TYPE).getValue();
         List<PropertyDescriptor> namespaceProperties = propertiesByPrefix.get("ns");
         EditableNamespaceContext namespaces = new EditableNamespaceContext();
         if (namespaceProperties != null) {
@@ -591,19 +591,6 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
     StringHandle handleForQuery(String queryValue, Format format) {
         StringHandle handle = new StringHandle().withFormat(format).with(queryValue);
         return handle;
-    }
-
-    QueryBatcher batcherFromCombinedQuery(DataMovementManager dataMovementManager, QueryManager queryMgr,
-            String queryValue, Format format) {
-        RawCombinedQueryDefinition qdef = queryMgr.newRawCombinedQueryDefinition(handleForQuery(queryValue, format));
-        return dataMovementManager.newQueryBatcher(qdef);
-    }
-
-    QueryBatcher batcherFromStructuredQuery(DataMovementManager dataMovementManager, QueryManager queryMgr,
-            String queryValue, Format format) {
-        RawStructuredQueryDefinition qdef = queryMgr
-                .newRawStructuredQueryDefinition(handleForQuery(queryValue, format));
-        return dataMovementManager.newQueryBatcher(qdef);
     }
 
     public static class QueryTypes extends AllowableValuesSet {

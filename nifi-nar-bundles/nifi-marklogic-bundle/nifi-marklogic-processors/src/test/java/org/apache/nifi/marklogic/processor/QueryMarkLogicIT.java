@@ -171,6 +171,7 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
                 "      } \n" +
                 "  }\n" +
                 "} }");
+        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.DOCUMENTS_AND_META);
         runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.COMBINED_JSON);
         testStateManagerJSON(runner, expectedJsonCount);
         runner.setProperty(QueryMarkLogic.QUERY, "<cts:element-value-query xmlns:cts=\"http://marklogic.com/cts\">\n" +
@@ -382,7 +383,7 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
     @Test
     public void testUrisOnly() throws InitializationException, SAXException, IOException, ParserConfigurationException {
         TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
-        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.URIS_ONLY);
+        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.META);
         runner.setProperty(QueryMarkLogic.QUERY, "xmlcontent");
         runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRING);
         runner.assertValid();
