@@ -25,6 +25,7 @@ import java.util.Set;
 import org.apache.nifi.annotation.behavior.DynamicProperty;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.InputRequirement.Requirement;
+import org.apache.nifi.annotation.behavior.Stateful;
 import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
 import org.apache.nifi.annotation.behavior.WritesAttribute;
@@ -34,6 +35,7 @@ import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
+import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
@@ -58,6 +60,7 @@ description = "Adds server transform parameters to be passed to the server trans
 expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @WritesAttributes({
         @WritesAttribute(attribute = "filename", description = "The filename is set to the uri of the document deleted from MarkLogic") })
+@Stateful(description = "Can keep state of a range index value to restrict future queries.", scopes = { Scope.CLUSTER })
 public class ApplyTransformMarkLogic extends QueryMarkLogic {
     public static final PropertyDescriptor APPLY_RESULT_TYPE = new PropertyDescriptor.Builder()
             .name("Apply Result Type").displayName("Apply Result Type").defaultValue(ApplyResultTypes.REPLACE.getValue())
@@ -86,6 +89,8 @@ public class ApplyTransformMarkLogic extends QueryMarkLogic {
         list.add(QUERY_TYPE);
         list.add(APPLY_RESULT_TYPE);
         list.add(TRANSFORM);
+        list.add(STATE_INDEX);
+        list.add(STATE_INDEX_TYPE);
         properties = Collections.unmodifiableList(list);
         Set<Relationship> set = new HashSet<>();
         set.add(SUCCESS);

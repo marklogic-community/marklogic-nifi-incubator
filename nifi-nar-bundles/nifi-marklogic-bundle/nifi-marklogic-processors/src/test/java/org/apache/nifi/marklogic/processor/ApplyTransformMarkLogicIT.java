@@ -16,7 +16,6 @@
  */
 package org.apache.nifi.marklogic.processor;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -102,7 +101,6 @@ public class ApplyTransformMarkLogicIT extends AbstractMarkLogicIT {
         StringHandle queryHandle = new StringHandle().withFormat(Format.XML).with(queryStr);
         RawCombinedQueryDefinition qDef = queryMgr.newRawCombinedQueryDefinition(queryHandle);
         DocumentPage page = client.newDocumentManager().search(qDef, 1);
-        assertEquals(page.size(), 1);
         page.forEach((docRecord) -> {
             String doc = docRecord.getContentAs(String.class);
             assertTrue(doc.contains("myAttr=\"myVal\""));

@@ -23,12 +23,14 @@ import static org.junit.Assert.fail;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.nifi.components.state.Scope;
 import org.apache.nifi.flowfile.attributes.CoreAttributes;
 import org.apache.nifi.processor.Processor;
 import org.apache.nifi.reporting.InitializationException;
@@ -72,8 +74,8 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
 
     @After
     public void teardown() {
-        super.teardown();
-        deleteDocumentsInCollection(collection);
+        //super.teardown();
+        //deleteDocumentsInCollection(collection);
     }
 
     protected TestRunner getNewTestRunner(Class processor) throws InitializationException {
@@ -155,6 +157,111 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
         assertEquals(expectedByteArray.length, actualByteArray.length);
         assertTrue(Arrays.equals(expectedByteArray, actualByteArray));
         runner.shutdown();
+    }
+
+    @Test
+    public void testStateManagerWithCombinedQuery() throws InitializationException, IOException {
+        TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
+        // test with string query
+        runner.setProperty(QueryMarkLogic.QUERY, "{\"search\" : {\n" +
+                "  \"ctsquery\": {\n" +
+                "    \"jsonPropertyValueQuery\":{\n" +
+                "      \"property\":[\"sample\"],\n" +
+                "      \"value\":[\"jsoncontent\"]\n" +
+                "      } \n" +
+                "  }\n" +
+                "} }");
+        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.DOCUMENTS_AND_META);
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.COMBINED_JSON);
+        testStateManagerJSON(runner, expectedJsonCount);
+        runner.setProperty(QueryMarkLogic.QUERY, "<cts:element-value-query xmlns:cts=\"http://marklogic.com/cts\">\n" +
+                "  <cts:element>sample</cts:element>\n" +
+                "  <cts:text xml:lang=\"en\">xmlcontent</cts:text>\n" +
+                "</cts:element-value-query>");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.COMBINED_XML);
+        testStateManagerXML(runner, expectedXmlCount);
+        runner.shutdown();
+    }
+
+    @Test
+    public void testStateManagerWithStructuredQuery() throws InitializationException, IOException {
+        TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
+        // test with string query
+        runner.setProperty(QueryMarkLogic.QUERY, "{\n" +
+                "  \"query\": {\n" +
+                "    \"queries\": [\n" +
+                "      { \n" +
+                "       \"value-query\": {\n" +
+                "          \"type\": \"string\",\n" +
+                "          \"json-property\": [\"sample\"],\n" +
+                "          \"text\": [\"jsoncontent\"]\n" +
+                "        }" +
+                "      }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "}");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRUCTURED_JSON);
+        testStateManagerJSON(runner, expectedJsonCount);
+        runner.setProperty(QueryMarkLogic.QUERY, "<query xmlns=\"http://marklogic.com/appservices/search\">\n" +
+                "  <word-query>\n" +
+                "    <element name=\"sample\" ns=\"\" />\n" +
+                "    <text>xmlcontent</text>\n" +
+                "  </word-query>\n" +
+                "</query>");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRUCTURED_XML);
+        testStateManagerXML(runner, expectedXmlCount);
+        runner.shutdown();
+    }
+
+    @Test
+    public void testStateManagerWithStringQuery() throws InitializationException, IOException {
+        TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
+        // test with string query
+        runner.setProperty(QueryMarkLogic.QUERY, "jsoncontent");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRING);
+        testStateManagerJSON(runner, expectedJsonCount);
+        runner.setProperty(QueryMarkLogic.QUERY, "xmlcontent");
+        runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRING);
+        testStateManagerXML(runner, expectedXmlCount);
+        runner.shutdown();
+    }
+
+    private void testStateManagerJSON(TestRunner runner, int expectedCount) throws InitializationException, IOException {
+        runner.setProperty(QueryMarkLogic.STATE_INDEX, "dateTime");
+        runner.setProperty(QueryMarkLogic.STATE_INDEX_TYPE, QueryMarkLogic.IndexTypes.JSON_PROPERTY);
+        testStateManagerWithIndex(runner, expectedCount);
+    }
+
+    private void testStateManagerXML(TestRunner runner, int expectedCount) throws InitializationException, IOException {
+        runner.setProperty("ns:nst", "namespace-test");
+        runner.setProperty(QueryMarkLogic.STATE_INDEX, "/root/nst:dateTime");
+        runner.setProperty(QueryMarkLogic.STATE_INDEX_TYPE, QueryMarkLogic.IndexTypes.PATH);
+        testStateManagerWithIndex(runner, expectedCount);
+        runner.setProperty("ns:t", "namespace-test");
+        runner.setProperty(QueryMarkLogic.STATE_INDEX, "t:dateTime");
+        runner.setProperty(QueryMarkLogic.STATE_INDEX_TYPE, QueryMarkLogic.IndexTypes.ELEMENT);
+        testStateManagerWithIndex(runner, expectedCount);
+    }
+
+    private void testStateManagerWithIndex(TestRunner runner, int expectedCount) throws InitializationException, IOException {
+        runner.assertValid();
+        runner.run();
+        runner.assertTransferCount(QueryMarkLogic.SUCCESS, expectedCount);
+        runner.assertAllFlowFilesContainAttribute(QueryMarkLogic.SUCCESS,CoreAttributes.FILENAME.key());
+        List<MockFlowFile> flowFiles = runner.getFlowFilesForRelationship(QueryMarkLogic.SUCCESS);
+        assertEquals(flowFiles.size(), expectedCount);
+        runner.clearTransferState();
+        runner.getStateManager().assertStateEquals("queryState", "2000-01-01T00:00:00", Scope.CLUSTER);
+        runner.run();
+        runner.assertTransferCount(QueryMarkLogic.SUCCESS, 0);
+        runner.clearTransferState();
+        HashMap<String,String> state = new HashMap<String,String>();
+        state.put("queryState", "1999-01-01T00:00:00");
+        runner.getStateManager().setState(state, Scope.CLUSTER);
+        runner.run();
+        runner.assertTransferCount(QueryMarkLogic.SUCCESS, expectedCount);
+        runner.clearTransferState();
+        runner.getStateManager().setState(new HashMap<String,String>(), Scope.CLUSTER);
     }
 
     @Test
@@ -276,7 +383,7 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
     @Test
     public void testUrisOnly() throws InitializationException, SAXException, IOException, ParserConfigurationException {
         TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
-        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.URIS_ONLY);
+        runner.setProperty(QueryMarkLogic.RETURN_TYPE, QueryMarkLogic.ReturnTypes.META);
         runner.setProperty(QueryMarkLogic.QUERY, "xmlcontent");
         runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRING);
         runner.assertValid();

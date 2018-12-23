@@ -69,9 +69,9 @@ import com.marklogic.client.io.Format;
 @CapabilityDescription("Write batches of FlowFiles as documents to a MarkLogic server using the " +
     "MarkLogic Data Movement SDK (DMSDK)")
 @SystemResourceConsideration(resource = SystemResource.MEMORY)
-@DynamicProperty(name = "Server transform parameter name", value = "Value of the server transform parameter",
-    description = "Adds server transform parameters to be passed to the server transform specified. "
-    + "Server transform parameter name should start with the string 'trans:'.",
+@DynamicProperty(name = "trans: Server transform parameter name, property: Property name to add, meta: Metadata name to add",
+    value = "trans: Value of the server transform parameter, property: Property value to add, meta: Metadata value to add",
+    description = "Depending on the property prefix, routes data to transform, metadata, or property.",
     expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
 @WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
@@ -85,7 +85,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             this.session = session;
         }
     }
-    private static final Map<String, FlowFileInfo> uriFlowFileMap = new ConcurrentHashMap<>();
+    protected static final Map<String, FlowFileInfo> uriFlowFileMap = new ConcurrentHashMap<>();
     public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder()
         .name("Collections")
         .displayName("Collections")
@@ -191,21 +191,10 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .build();
 
     private volatile DataMovementManager dataMovementManager;
-    private volatile WriteBatcher writeBatcher;
+    protected volatile WriteBatcher writeBatcher;
     // If no FlowFile exists when this processor is triggered, this variable determines whether or not a call is made to
     // flush the WriteBatcher
     private volatile boolean shouldFlushIfEmpty = true;
-
-    @Override
-    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
-        return new PropertyDescriptor.Builder()
-            .name(propertyDescriptorName)
-            .addValidator(Validator.VALID)
-            .dynamic(true)
-            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
-            .required(false)
-            .build();
-    }
 
     @Override
     public void init(ProcessorInitializationContext context) {
@@ -272,13 +261,13 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         dataMovementManager.startJob(writeBatcher);
     }
 
-    private FlowFileInfo getFlowFileInfoForWriteEvent(WriteEvent writeEvent) {
+    protected FlowFileInfo getFlowFileInfoForWriteEvent(WriteEvent writeEvent) {
         DocumentMetadataHandle metadata = (DocumentMetadataHandle) writeEvent.getMetadata();
         String flowFileUUID = metadata.getMetadataValues().get("flowFileUUID");
         return uriFlowFileMap.get(flowFileUUID);
     }
 
-    private void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
+    protected void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
         FlowFileInfo flowFile = getFlowFileInfoForWriteEvent(writeEvent);
         if(flowFile != null) {
             synchronized(flowFile.session) {
@@ -357,37 +346,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             uri += suffix;
         }
 
-        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-
-        // Get collections from processor property definition
-        final PropertyValue collectionProperty = context.getProperty(COLLECTIONS);
-        final String collectionsValue = collectionProperty.isSet()
-             ? (collectionProperty.isExpressionLanguagePresent()
-                 ? collectionProperty.evaluateAttributeExpressions(flowFile).getValue() : collectionProperty.getValue()) : null;
-
-        final String[] collections = getArrayFromCommaSeparatedString(collectionsValue);
-
-        // getArrayFromCommaSeparatedString checks to see if collectionsValue is empty or null.
-        // If collectionsValue is empty or NULL, collections would be NULL. So, no need to check if
-        // collectionsValue is empty or null again here
-        if (collections != null && !collectionsValue.startsWith("${") && !collectionsValue.endsWith("}")) {
-            metadata.withCollections(collections);
-        }
-
-        // Get permission from processor property definition
-        final String permissionsValue = context.getProperty(PERMISSIONS).getValue();
-        final String[] tokens = getArrayFromCommaSeparatedString(permissionsValue);
-        if (tokens != null) {
-            for (int i = 0; i < tokens.length; i += 2) {
-                String role = tokens[i];
-                String capability = tokens[i + 1];
-                metadata.withPermission(role, DocumentMetadataHandle.Capability.getValueOf(capability));
-            }
-        }
-        // Add the flow file UUID for Provenance purposes and for sending them
-        // to the appropriate relationship
-        String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());
-        metadata.withMetadataValue("flowFileUUID", flowFileUUID);
+        DocumentMetadataHandle metadata = buildMetadataHandle(context, flowFile, context.getProperty(COLLECTIONS), context.getProperty(PERMISSIONS));
         final byte[] content = new byte[(int) flowFile.getSize()];
         session.read(flowFile, inputStream -> StreamUtils.fillBuffer(inputStream, content));
 
@@ -404,12 +363,63 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         if (mimetype != null) {
             handle.withMimetype(mimetype);
         }
+        String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());
 
         uriFlowFileMap.put(flowFileUUID, new FlowFileInfo(flowFile, session));
         return new WriteEventImpl()
             .withTargetUri(uri)
             .withMetadata(metadata)
             .withContent(handle);
+    }
+
+    protected DocumentMetadataHandle buildMetadataHandle(
+        final ProcessContext context,
+        final FlowFile flowFile,
+        final PropertyValue collectionProperty,
+        final PropertyValue permissionsProperty
+    ) {
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+
+        // Get collections from processor property definition
+        final String collectionsValue = collectionProperty.isSet()
+             ? collectionProperty.evaluateAttributeExpressions(flowFile).getValue() : null;
+
+        final String[] collections = getArrayFromCommaSeparatedString(collectionsValue);
+        metadata.withCollections(collections);
+
+        // Get permission from processor property definition
+        final String permissionsValue = permissionsProperty.getValue();
+        final String[] tokens = getArrayFromCommaSeparatedString(permissionsValue);
+        if (tokens != null) {
+            for (int i = 0; i < tokens.length; i += 2) {
+                String role = tokens[i];
+                String capability = tokens[i + 1];
+                metadata.withPermission(role, DocumentMetadataHandle.Capability.getValueOf(capability));
+            }
+        }
+        String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());
+        // Add the flow file UUID for Provenance purposes and for sending them
+        // to the appropriate relationship
+        metadata.withMetadataValue("flowFileUUID", flowFileUUID);
+
+        // Set dynamic meta
+        String metaPrefix = "meta";
+        List<PropertyDescriptor> metaProperties = propertiesByPrefix.get(metaPrefix);
+        if (metaProperties != null) {
+            for (final PropertyDescriptor propertyDesc: metaProperties) {
+                metadata.withMetadataValue(propertyDesc.getName().substring(metaPrefix.length() + 1), context.getProperty(propertyDesc).evaluateAttributeExpressions(flowFile).getValue());
+            }
+        }
+        // Set dynamic properties
+        String propertyPrefix = "property";
+        List<PropertyDescriptor> propertyProperties = propertiesByPrefix.get(propertyPrefix);
+        if (propertyProperties != null) {
+            for (final PropertyDescriptor propertyDesc: propertiesByPrefix.get(propertyPrefix)) {
+                metadata.withProperty(propertyDesc.getName().substring(propertyPrefix.length() + 1), context.getProperty(propertyDesc).evaluateAttributeExpressions(flowFile).getValue());
+            }
+        }
+
+        return metadata;
     }
 
     protected void addFormat(String uri, BytesHandle handle) {

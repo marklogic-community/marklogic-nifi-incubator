@@ -19,12 +19,16 @@ package org.apache.nifi.marklogic.processor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
 import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
+import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
 import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
 import org.apache.nifi.processor.ProcessContext;
@@ -76,12 +80,14 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         .build();
 
     public static final PropertyDescriptor TRANSFORM = new PropertyDescriptor.Builder()
-            .name("Server Transform")
-            .displayName("Server Transform")
-            .description("The name of REST server transform to apply to every document")
-            .addValidator(Validator.VALID)
-            .required(false)
-            .build();
+        .name("Server Transform")
+        .displayName("Server Transform")
+        .description("The name of REST server transform to apply to every document")
+        .addValidator(Validator.VALID)
+        .required(false)
+        .build();
+
+    protected final Map<String, List<PropertyDescriptor>> propertiesByPrefix = new ConcurrentHashMap<String, List<PropertyDescriptor>>();
 
     // Patterns for more friendly error messages.
     private Pattern unauthorizedPattern =
@@ -124,18 +130,64 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         return stringArray;
     }
 
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+        String[] parts = propertyDescriptorName.split(":", 2);
+        String prefix = parts[0];
+        String postfix = (parts.length > 1) ? parts[1] : "";
+        String description;
+
+        switch(prefix) {
+            case "trans":
+                description = "Passes the parameter '" + propertyDescriptorName + "' for transform";
+                break;
+            case "ns":
+                description = "Maps value to namespace prefix '" + postfix + "'";
+                break;
+            case "meta":
+                description = "Adds the value as the metadata '" + postfix + "'";
+                break;
+            case "property":
+                description = "Adds the value as the property '" + postfix + "'";
+                break;
+            default:
+                description = "";
+                break;
+        }
+
+        PropertyDescriptor propertyDesc = new PropertyDescriptor.Builder()
+            .name(propertyDescriptorName)
+            .addValidator(Validator.VALID)
+            .dynamic(true)
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
+            .required(false)
+            .description(description)
+            .build();
+        if (propertyDescriptorName.contains(":")) {
+            List<PropertyDescriptor> propertyDescriptors = propertiesByPrefix.get(prefix);
+            if (propertyDescriptors == null) {
+                propertyDescriptors = new CopyOnWriteArrayList<PropertyDescriptor>();
+                propertiesByPrefix.put(prefix, propertyDescriptors);
+            }
+            propertyDescriptors.add(propertyDesc);
+        }
+        return propertyDesc;
+    }
+
     protected ServerTransform buildServerTransform(ProcessContext context) {
         ServerTransform serverTransform = null;
         final String transform = context.getProperty(TRANSFORM).getValue();
         if (transform != null) {
             serverTransform = new ServerTransform(transform);
-            final String transformPrefix = "trans:";
-            for (final PropertyDescriptor descriptor : context.getProperties().keySet()) {
-                if (!descriptor.isDynamic() && !descriptor.getName().startsWith(transformPrefix)) continue;
-                serverTransform.addParameter(
-                    descriptor.getName().substring(transformPrefix.length()),
-                    context.getProperty(descriptor).evaluateAttributeExpressions(context.getAllProperties()).getValue()
-                );
+            final String transformPrefix = "trans";
+            final List<PropertyDescriptor> transformProperties = propertiesByPrefix.get(transformPrefix);
+            if (transformProperties != null) {
+                for (final PropertyDescriptor descriptor : transformProperties) {
+                    serverTransform.addParameter(
+                        descriptor.getName().substring(transformPrefix.length() + 1),
+                        context.getProperty(descriptor).evaluateAttributeExpressions(context.getAllProperties()).getValue()
+                     );
+                }
             }
         }
         return serverTransform;
@@ -154,20 +206,6 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
     public static abstract class AllowableValuesSet {
         public static AllowableValue[] allValues;
 
-        public static AllowableValue[] values() {
-            return allValues;
-        }
-
-        public static AllowableValue valueOf(String valueString) {
-            AllowableValue value = null;
-            for (int i = 0; i < allValues.length; i++) {
-                if (allValues[i].getValue().equals(valueString)) {
-                    value = allValues[i];
-                    break;
-                }
-            }
-            return value;
-        }
     }
 
     protected void handleThrowable(final Throwable t) {
