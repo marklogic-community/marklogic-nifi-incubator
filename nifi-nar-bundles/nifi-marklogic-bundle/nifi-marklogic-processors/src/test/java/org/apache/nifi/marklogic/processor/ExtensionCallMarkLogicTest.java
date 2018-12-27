@@ -1,0 +1,60 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.nifi.marklogic.processor;
+
+import org.apache.nifi.marklogic.processor.ExecuteScriptMarkLogicTest.TestExecuteScriptMarkLogic;
+import org.apache.nifi.marklogic.processor.ExtensionCallMarkLogic.MethodTypes;
+import org.apache.nifi.marklogic.processor.ExtensionCallMarkLogic.PayloadSources;
+import org.apache.nifi.processor.ProcessContext;
+import org.apache.nifi.reporting.InitializationException;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.io.Format;
+
+public class ExtensionCallMarkLogicTest extends AbstractMarkLogicProcessorTest {
+    private TestExtensionCallMarkLogic processor;
+
+    @Before
+    public void setup() throws InitializationException {
+        processor = new TestExtensionCallMarkLogic();
+        initialize(processor);
+        runner.setProperty(TestExecuteScriptMarkLogic.DATABASE_CLIENT_SERVICE, databaseClientServiceIdentifier);
+    }
+
+    @Test
+    public void testValidator() throws Exception {
+        runner.enableControllerService(service);
+        runner.assertValid(service);
+        runner.assertNotValid();
+
+        runner.setProperty(TestExtensionCallMarkLogic.EXTENSION_NAME, "extension");
+        runner.setProperty(TestExtensionCallMarkLogic.REQUIRES_INPUT, "true");
+        runner.setProperty(TestExtensionCallMarkLogic.PAYLOAD_SOURCE, PayloadSources.NONE);
+        runner.setProperty(TestExtensionCallMarkLogic.PAYLOAD_FORMAT, Format.TEXT.name());
+        runner.setProperty(TestExtensionCallMarkLogic.METHOD_TYPE, MethodTypes.POST);
+        runner.assertValid();
+    }
+
+    class TestExtensionCallMarkLogic extends ExtensionCallMarkLogic {
+        @Override
+        public DatabaseClient getDatabaseClient(ProcessContext context) {
+            return new TestMLDatabaseClient();
+        }
+    }
+}

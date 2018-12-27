@@ -25,6 +25,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import org.apache.nifi.components.AllowableValue;
 import org.apache.nifi.components.PropertyDescriptor;
 import org.apache.nifi.components.Validator;
@@ -32,6 +34,7 @@ import org.apache.nifi.expression.ExpressionLanguageScope;
 import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
 import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
 import org.apache.nifi.processor.ProcessContext;
+import org.apache.nifi.processor.ProcessSession;
 import org.apache.nifi.processor.ProcessorInitializationContext;
 import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
@@ -110,6 +113,22 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         properties = Collections.unmodifiableList(list);
     }
 
+    public void populatePropertiesByPrefix(ProcessContext context) {
+        propertiesByPrefix.clear();
+        for (PropertyDescriptor propertyDesc: context.getProperties().keySet()) {
+            if (propertyDesc.isDynamic() && propertyDesc.getName().contains(":")) {
+                String[] parts = propertyDesc.getName().split(":", 2);
+                String prefix = parts[0];
+                List<PropertyDescriptor> propertyDescriptors = propertiesByPrefix.get(prefix);
+                if (propertyDescriptors == null) {
+                    propertyDescriptors = new CopyOnWriteArrayList<PropertyDescriptor>();
+                    propertiesByPrefix.put(prefix, propertyDescriptors);
+                }
+                propertyDescriptors.add(propertyDesc);
+            }
+        }
+    }
+
     protected DatabaseClient getDatabaseClient(ProcessContext context) {
         return context.getProperty(DATABASE_CLIENT_SERVICE)
             .asControllerService(MarkLogicDatabaseClientService.class)
@@ -163,14 +182,6 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
             .required(false)
             .description(description)
             .build();
-        if (propertyDescriptorName.contains(":")) {
-            List<PropertyDescriptor> propertyDescriptors = propertiesByPrefix.get(prefix);
-            if (propertyDescriptors == null) {
-                propertyDescriptors = new CopyOnWriteArrayList<PropertyDescriptor>();
-                propertiesByPrefix.put(prefix, propertyDescriptors);
-            }
-            propertyDescriptors.add(propertyDesc);
-        }
         return propertyDesc;
     }
 
@@ -208,33 +219,36 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
 
     }
 
-    protected void handleThrowable(final Throwable t) {
+    protected void handleThrowable(final Throwable t, final ProcessSession session) {
         final String statusMsg;
         /* FailedRequestException can hide the root cause a layer deeper.
-         * Go to the failed request to get the status code.
+         * Go to the failed request to get the status message.
          */
         if (t instanceof FailedRequestException) {
             statusMsg = ((FailedRequestException) t).getFailedRequest().getMessage();
         } else {
             statusMsg = "";
         }
+        final Throwable rootCause = ExceptionUtils.getRootCause(t);
         if (t instanceof UnauthorizedUserException || statusMsg.matches(unauthorizedPattern.pattern())) {
-            getLogger().error("{} failed! Verify your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof ForbiddenUserException || statusMsg.matches(forbiddenPattern.pattern())) {
-            getLogger().error("{} failed! Verify your user has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your user has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof ResourceNotFoundException || statusMsg.matches(resourceNotFoundPattern.pattern())) {
             getLogger().error("{} failed due to 'Resource Not Found'! " +
                     "Verify you're pointing a MarkLogic REST instance and referenced extensions/transforms are installed. "+
-                    "Throwable exception {}; rolling back session", new Object[]{this, t});
+                    "Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (statusMsg.matches(invalidXMLPattern.pattern())) {
-            getLogger().error("{} failed! Expected valid XML payload! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Expected valid XML payload! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (statusMsg.matches(invalidJSONPattern.pattern())) {
-            getLogger().error("{} failed! Expected valid JSON payload! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Expected valid JSON payload! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof MarkLogicBindingException) {
-            getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else {
-            throw new ProcessException(t);
+            getLogger().error("{} failed! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         }
+        session.rollback(true);
+        throw new ProcessException(rootCause);
     }
 
 }

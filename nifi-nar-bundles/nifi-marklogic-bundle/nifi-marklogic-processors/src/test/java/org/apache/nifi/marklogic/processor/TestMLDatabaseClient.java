@@ -17,6 +17,7 @@
 package org.apache.nifi.marklogic.processor;
 
 import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.impl.OkHttpServices;
 
@@ -27,6 +28,7 @@ import com.marklogic.client.impl.OkHttpServices;
  */
 class TestMLDatabaseClient extends DatabaseClientImpl {
     static OkHttpServices services = new OkHttpServices();
+    private ServerEvaluationCall serverEval = new TestServerEvaluationCall();
 
     public TestMLDatabaseClient() {
         super(services, "", 0, "", null, ConnectionType.DIRECT);
@@ -35,5 +37,10 @@ class TestMLDatabaseClient extends DatabaseClientImpl {
     @Override
     public DataMovementManager newDataMovementManager() {
         return new TestDataMovementManager();
+    }
+
+    @Override
+    public ServerEvaluationCall newServerEval() {
+        return serverEval;
     }
 }
