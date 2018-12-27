@@ -23,14 +23,14 @@
         <version>1.7.1</version>
     </parent>
 
-    <version>1.7.1.3</version>
+    <version>1.7.1.4</version>
 
     <artifactId>nifi-marklogic-bundle</artifactId>
     <packaging>pom</packaging>
 
     <properties>
         <nifi.version>1.7.1</nifi.version>
-        <marklogicnar.version>1.7.1.3</marklogicnar.version>
+        <marklogicnar.version>1.7.1.4</marklogicnar.version>
         <marklogicclientapi.version>4.1.1</marklogicclientapi.version>
         <mljavaclientutil.version>3.9.0</mljavaclientutil.version>
         <marklogicdatamovementcomponents.version>1.0</marklogicdatamovementcomponents.version>
