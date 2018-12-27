@@ -32,7 +32,6 @@ import org.apache.nifi.annotation.behavior.EventDriven;
 import org.apache.nifi.annotation.behavior.InputRequirement;
 import org.apache.nifi.annotation.behavior.SystemResource;
 import org.apache.nifi.annotation.behavior.SystemResourceConsideration;
-import org.apache.nifi.annotation.behavior.TriggerWhenEmpty;
 import org.apache.nifi.annotation.documentation.CapabilityDescription;
 import org.apache.nifi.annotation.documentation.Tags;
 import org.apache.nifi.components.PropertyDescriptor;
@@ -72,7 +71,6 @@ import com.marklogic.client.io.Format;
     value = "trans: Value of the server transform parameter, property: Property value to add, meta: Metadata value to add",
     description = "Depending on the property prefix, routes data to transform, metadata, or property.",
     expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
-@TriggerWhenEmpty
 public class PutMarkLogicRecord extends PutMarkLogic {
     static final PropertyDescriptor RECORD_READER = new PropertyDescriptor.Builder()
             .name("record-reader")
@@ -138,6 +136,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
     public final void onTrigger(ProcessContext context, ProcessSession session) throws ProcessException {
         final FlowFile flowFile = session.get();
         if (flowFile == null) {
+            context.yield();
             return;
         }
 
@@ -193,7 +192,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
         if(flowFileInfo != null) {
             synchronized(flowFileInfo.session) {
                 FlowFile flowFile = flowFileInfo.session.create();
-                flowFileInfo.session.getProvenanceReporter().send(flowFileInfo.flowFile, writeEvent.getTargetUri());
+                flowFileInfo.session.getProvenanceReporter().send(flowFile, writeEvent.getTargetUri());
                 flowFileInfo.session.transfer(flowFile, relationship);
             }
             if (getLogger().isDebugEnabled()) {
@@ -210,11 +209,11 @@ public class PutMarkLogicRecord extends PutMarkLogic {
             final BytesHandle contentHandle,
             final Map<String, String> additionalAttributes
     ) {
-        final String prefix = context.getProperty(URI_PREFIX).getValue();
+        final String prefix = context.getProperty(URI_PREFIX).evaluateAttributeExpressions(flowFile).getValue();
         if (prefix != null) {
             uri = prefix + uri;
         }
-        final String suffix = context.getProperty(URI_SUFFIX).getValue();
+        final String suffix = context.getProperty(URI_SUFFIX).evaluateAttributeExpressions(flowFile).getValue();
         if (suffix != null) {
             uri += suffix;
         }

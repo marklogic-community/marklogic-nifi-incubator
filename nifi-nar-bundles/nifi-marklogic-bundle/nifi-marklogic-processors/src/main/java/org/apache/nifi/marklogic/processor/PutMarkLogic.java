@@ -162,6 +162,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .displayName("URI Prefix")
         .description("The prefix to prepend to each URI")
         .required(false)
+        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
         .addValidator(Validator.VALID)
         .build();
 
@@ -170,6 +171,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .displayName("URI Suffix")
         .description("The suffix to append to each URI")
         .required(false)
+        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
         .addValidator(Validator.VALID)
         .build();
 
@@ -223,6 +225,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     @OnScheduled
     public void onScheduled(ProcessContext context) {
+        super.populatePropertiesByPrefix(context);
         dataMovementManager = getDatabaseClient(context).newDataMovementManager();
         writeBatcher = dataMovementManager.newWriteBatcher()
             .withJobId(context.getProperty(JOB_ID).getValue())
@@ -316,8 +319,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 addWriteEvent(this.writeBatcher, writeEvent);
             }
         } catch (final Throwable t) {
-            session.rollback(true);
-            this.handleThrowable(t);
+            this.handleThrowable(t, session);
         }
     }
 
@@ -337,11 +339,11 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     protected WriteEvent buildWriteEvent(ProcessContext context, ProcessSession session, FlowFile flowFile) {
         String uri = flowFile.getAttribute(context.getProperty(URI_ATTRIBUTE_NAME).getValue());
-        final String prefix = context.getProperty(URI_PREFIX).getValue();
+        final String prefix = context.getProperty(URI_PREFIX).evaluateAttributeExpressions(flowFile).getValue();
         if (prefix != null) {
             uri = prefix + uri;
         }
-        final String suffix = context.getProperty(URI_SUFFIX).getValue();
+        final String suffix = context.getProperty(URI_SUFFIX).evaluateAttributeExpressions(flowFile).getValue();
         if (suffix != null) {
             uri += suffix;
         }

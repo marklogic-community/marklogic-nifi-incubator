@@ -196,6 +196,7 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
     }
 
     public void onTrigger(final ProcessContext context, final ProcessSession session) throws ProcessException {
+        super.populatePropertiesByPrefix(context);
         try {
             final FlowFile input;
 
@@ -267,9 +268,8 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
             queryBatcher.awaitCompletion();
             dataMovementManager.stopJob(queryBatcher);
         } catch (final Throwable t) {
-            session.rollback(true);
             context.yield();
-            this.handleThrowable(t);
+            this.handleThrowable(t, session);
         }
     }
 
@@ -523,8 +523,6 @@ public class QueryMarkLogic extends AbstractMarkLogicProcessor {
             }
             RawCombinedQueryDefinition finalQuery = queryManager
                     .newRawCombinedQueryDefinition(handleForQuery(rawCombinedQueryBuilder.toString(), format));
-            System.out.println(((StringHandle)finalQuery.getHandle()).get());
-            System.out.println(((StringHandle)finalQuery.getHandle()).getFormat());
             queryBatcher = dataMovementManager.newQueryBatcher(finalQuery);
         } else {
             if (queryDef instanceof RawCombinedQueryDefinition) {
