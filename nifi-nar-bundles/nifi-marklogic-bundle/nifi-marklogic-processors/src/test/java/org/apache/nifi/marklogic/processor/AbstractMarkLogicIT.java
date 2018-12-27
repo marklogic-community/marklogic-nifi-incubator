@@ -107,10 +107,10 @@ public class AbstractMarkLogicIT {
             String content = "";
             if(i % xmlMod == 0) {
                 fileName += i + ".xml";
-                content = "<sample>xmlcontent</sample>";
+                content = "<root><sample>xmlcontent</sample><dateTime xmlns=\"namespace-test\">2000-01-01T00:00:00.000000-08:00</dateTime></root>";
             } else if ( i % jsonMod == 0) {
                 fileName += i + ".json";
-                content = "{\"sample\":\"jsoncontent\"}";
+                content = "{\"sample\":\"jsoncontent\", \"dateTime\":\"2000-01-01T00:00:00.000000-08:00\"}";
             } else if (i % txtMod == 0) {
                 fileName += i + ".txt";
                 content = "A sample text document";
