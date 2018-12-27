@@ -16,6 +16,30 @@
  */
 package org.apache.nifi.marklogic.processor;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
+import org.apache.nifi.components.AllowableValue;
+import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.Validator;
+import org.apache.nifi.expression.ExpressionLanguageScope;
+import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
+import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
+import org.apache.nifi.processor.ProcessContext;
+import org.apache.nifi.processor.ProcessSession;
+import org.apache.nifi.processor.ProcessorInitializationContext;
+import org.apache.nifi.processor.Relationship;
+import org.apache.nifi.processor.exception.ProcessException;
+import org.apache.nifi.processor.util.StandardValidators;
+
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.ForbiddenUserException;
@@ -23,23 +47,6 @@ import com.marklogic.client.MarkLogicBindingException;
 import com.marklogic.client.ResourceNotFoundException;
 import com.marklogic.client.UnauthorizedUserException;
 import com.marklogic.client.document.ServerTransform;
-
-import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
-import org.apache.nifi.components.AllowableValue;
-import org.apache.nifi.components.PropertyDescriptor;
-import org.apache.nifi.components.Validator;
-import org.apache.nifi.processor.AbstractSessionFactoryProcessor;
-import org.apache.nifi.processor.ProcessContext;
-import org.apache.nifi.processor.ProcessorInitializationContext;
-import org.apache.nifi.processor.Relationship;
-import org.apache.nifi.processor.exception.ProcessException;
-import org.apache.nifi.processor.util.StandardValidators;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
 
 /**
  * Defines common properties for MarkLogic processors.
@@ -76,12 +83,14 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         .build();
 
     public static final PropertyDescriptor TRANSFORM = new PropertyDescriptor.Builder()
-            .name("Server Transform")
-            .displayName("Server Transform")
-            .description("The name of REST server transform to apply to every document")
-            .addValidator(Validator.VALID)
-            .required(false)
-            .build();
+        .name("Server Transform")
+        .displayName("Server Transform")
+        .description("The name of REST server transform to apply to every document")
+        .addValidator(Validator.VALID)
+        .required(false)
+        .build();
+
+    protected final Map<String, List<PropertyDescriptor>> propertiesByPrefix = new ConcurrentHashMap<String, List<PropertyDescriptor>>();
 
     // Patterns for more friendly error messages.
     private Pattern unauthorizedPattern =
@@ -104,6 +113,22 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         properties = Collections.unmodifiableList(list);
     }
 
+    public void populatePropertiesByPrefix(ProcessContext context) {
+        propertiesByPrefix.clear();
+        for (PropertyDescriptor propertyDesc: context.getProperties().keySet()) {
+            if (propertyDesc.isDynamic() && propertyDesc.getName().contains(":")) {
+                String[] parts = propertyDesc.getName().split(":", 2);
+                String prefix = parts[0];
+                List<PropertyDescriptor> propertyDescriptors = propertiesByPrefix.get(prefix);
+                if (propertyDescriptors == null) {
+                    propertyDescriptors = new CopyOnWriteArrayList<PropertyDescriptor>();
+                    propertiesByPrefix.put(prefix, propertyDescriptors);
+                }
+                propertyDescriptors.add(propertyDesc);
+            }
+        }
+    }
+
     protected DatabaseClient getDatabaseClient(ProcessContext context) {
         return context.getProperty(DATABASE_CLIENT_SERVICE)
             .asControllerService(MarkLogicDatabaseClientService.class)
@@ -124,18 +149,56 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
         return stringArray;
     }
 
+    @Override
+    protected PropertyDescriptor getSupportedDynamicPropertyDescriptor(final String propertyDescriptorName) {
+        String[] parts = propertyDescriptorName.split(":", 2);
+        String prefix = parts[0];
+        String postfix = (parts.length > 1) ? parts[1] : "";
+        String description;
+
+        switch(prefix) {
+            case "trans":
+                description = "Passes the parameter '" + propertyDescriptorName + "' for transform";
+                break;
+            case "ns":
+                description = "Maps value to namespace prefix '" + postfix + "'";
+                break;
+            case "meta":
+                description = "Adds the value as the metadata '" + postfix + "'";
+                break;
+            case "property":
+                description = "Adds the value as the property '" + postfix + "'";
+                break;
+            default:
+                description = "";
+                break;
+        }
+
+        PropertyDescriptor propertyDesc = new PropertyDescriptor.Builder()
+            .name(propertyDescriptorName)
+            .addValidator(Validator.VALID)
+            .dynamic(true)
+            .expressionLanguageSupported(ExpressionLanguageScope.VARIABLE_REGISTRY)
+            .required(false)
+            .description(description)
+            .build();
+        return propertyDesc;
+    }
+
     protected ServerTransform buildServerTransform(ProcessContext context) {
         ServerTransform serverTransform = null;
         final String transform = context.getProperty(TRANSFORM).getValue();
         if (transform != null) {
             serverTransform = new ServerTransform(transform);
-            final String transformPrefix = "trans:";
-            for (final PropertyDescriptor descriptor : context.getProperties().keySet()) {
-                if (!descriptor.isDynamic() && !descriptor.getName().startsWith(transformPrefix)) continue;
-                serverTransform.addParameter(
-                    descriptor.getName().substring(transformPrefix.length()),
-                    context.getProperty(descriptor).evaluateAttributeExpressions(context.getAllProperties()).getValue()
-                );
+            final String transformPrefix = "trans";
+            final List<PropertyDescriptor> transformProperties = propertiesByPrefix.get(transformPrefix);
+            if (transformProperties != null) {
+                for (final PropertyDescriptor descriptor : transformProperties) {
+                    serverTransform.addParameter(
+                        descriptor.getName().substring(transformPrefix.length() + 1),
+                        context.getProperty(descriptor).evaluateAttributeExpressions(context.getAllProperties()).getValue()
+                     );
+                }
             }
         }
         return serverTransform;
@@ -154,49 +217,38 @@ public abstract class AbstractMarkLogicProcessor extends AbstractSessionFactoryP
     public static abstract class AllowableValuesSet {
         public static AllowableValue[] allValues;
 
-        public static AllowableValue[] values() {
-            return allValues;
-        }
-
-        public static AllowableValue valueOf(String valueString) {
-            AllowableValue value = null;
-            for (int i = 0; i < allValues.length; i++) {
-                if (allValues[i].getValue().equals(valueString)) {
-                    value = allValues[i];
-                    break;
-                }
-            }
-            return value;
-        }
     }
 
-    protected void handleThrowable(final Throwable t) {
+    protected void handleThrowable(final Throwable t, final ProcessSession session) {
         final String statusMsg;
         /* FailedRequestException can hide the root cause a layer deeper.
-         * Go to the failed request to get the status code.
+         * Go to the failed request to get the status message.
          */
         if (t instanceof FailedRequestException) {
             statusMsg = ((FailedRequestException) t).getFailedRequest().getMessage();
         } else {
             statusMsg = "";
         }
+        final Throwable rootCause = ExceptionUtils.getRootCause(t);
         if (t instanceof UnauthorizedUserException || statusMsg.matches(unauthorizedPattern.pattern())) {
-            getLogger().error("{} failed! Verify your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your credentials are correct. Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof ForbiddenUserException || statusMsg.matches(forbiddenPattern.pattern())) {
-            getLogger().error("{} failed! Verify your user has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Verify your user has ample privileges. Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof ResourceNotFoundException || statusMsg.matches(resourceNotFoundPattern.pattern())) {
             getLogger().error("{} failed due to 'Resource Not Found'! " +
                     "Verify you're pointing a MarkLogic REST instance and referenced extensions/transforms are installed. "+
-                    "Throwable exception {}; rolling back session", new Object[]{this, t});
+                    "Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (statusMsg.matches(invalidXMLPattern.pattern())) {
-            getLogger().error("{} failed! Expected valid XML payload! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Expected valid XML payload! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (statusMsg.matches(invalidJSONPattern.pattern())) {
-            getLogger().error("{} failed! Expected valid JSON payload! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed! Expected valid JSON payload! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else if (t instanceof MarkLogicBindingException) {
-            getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, t});
+            getLogger().error("{} failed to bind Java Object to XML or JSON! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         } else {
-            throw new ProcessException(t);
+            getLogger().error("{} failed! Throwable exception {}; rolling back session", new Object[]{this, rootCause});
         }
+        session.rollback(true);
+        throw new ProcessException(rootCause);
     }
 
 }

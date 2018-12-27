@@ -14,4 +14,5 @@ nb-configuration.xml
 *.iws
 *~
 
+bin/
 .vscode/

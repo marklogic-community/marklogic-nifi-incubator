@@ -13,5 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+org.apache.nifi.marklogic.processor.ApplyTransformMarkLogic
+org.apache.nifi.marklogic.processor.DeleteMarkLogic
+org.apache.nifi.marklogic.processor.ExecuteScriptMarkLogic
+org.apache.nifi.marklogic.processor.ExtensionCallMarkLogic
 org.apache.nifi.marklogic.processor.PutMarkLogic
+org.apache.nifi.marklogic.processor.PutMarkLogicRecord
 org.apache.nifi.marklogic.processor.QueryMarkLogic
