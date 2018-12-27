@@ -16,7 +16,9 @@
  */
 package org.apache.nifi.marklogic.processor;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.ForbiddenUserException;
@@ -33,6 +35,7 @@ public class TestServerEvaluationCall implements ServerEvaluationCall {
     public int xqueryCalls = 0;
     public int javascriptCalls = 0;
     public int modulePathCalls = 0;
+    public Map<String, Object> variables = new HashMap<String, Object>();
     @Override
     public ServerEvaluationCall xquery(String xquery) {
         xqueryCalls++;
@@ -65,26 +68,27 @@ public class TestServerEvaluationCall implements ServerEvaluationCall {
 
     @Override
     public ServerEvaluationCall addVariable(String name, String value) {
-        return this;
+        return addVariableAs(name, (Object) value) ;
     }
 
     @Override
     public ServerEvaluationCall addVariable(String name, Number value) {
-        return this;
+        return addVariableAs(name, (Object) value);
     }
 
     @Override
     public ServerEvaluationCall addVariable(String name, Boolean value) {
-        return this;
+        return addVariableAs(name, (Object) value);
     }
 
     @Override
     public ServerEvaluationCall addVariable(String name, AbstractWriteHandle value) {
-        return this;
+        return addVariableAs(name, (Object) value);
     }
 
     @Override
     public ServerEvaluationCall addVariableAs(String name, Object value) {
+        variables.put(name, value);
         return this;
     }
 
@@ -123,6 +127,7 @@ public class TestServerEvaluationCall implements ServerEvaluationCall {
         xqueryCalls = 0;
         javascriptCalls = 0;
         modulePathCalls = 0;
+        variables.clear();
     }
 
     class TestEvalResultIterator implements EvalResultIterator, Iterator<EvalResult> {
