@@ -1,0 +1,416 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <title>Step-by-Step MarkLogic Processor Guide - MarkLogic NiFi Processors</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Favicons -->
+    <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="/nifi/favicon.ico">
+    <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6638631-15', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1879746318909687'); // Insert your pixel ID here.
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- DO NOT MODIFY -->
+    <!-- End Facebook Pixel Code -->
+    <link type="text/css" rel="stylesheet" href="/nifi/assets/bundle.css">
+</head>
+<body class="">
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/nifi">
+                  <span class="logo">
+                    <img src="/nifi/images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                  </span>
+                  MarkLogic NiFi Processors
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    
+                        <li  >
+                            
+                            <a href="/nifi/getting-started">Getting Started</a>
+                            
+                        </li>
+                    
+                        <li  >
+                            
+                            <a href="https://github.com/marklogic/nifi">GitHub</a>
+                            
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+  <div class="panel-heading">Navigation</div>
+  <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/">Introduction</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/getting-started">Getting Started</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item active"  >
+    
+    <a href="/nifi/step-by-step">Step-by-Step Guide</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/nifi-features">NiFi Features</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/cookbook-recipes">Cookbook Recipes</a>
+    
+    
+      <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/get-data-from-a-relational-database">Relational Database to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/file-system-to-marklogic">File System to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/run-data-hub-input-flow">Run Data Hub Input Flow</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/step-by-step#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/bulk-record-insert-into-marklogic">Bulk Record Insert Into MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/dhf-with-smart-mastering">DHF With Smart Mastering</a>
+    
+    
+  </li>
+  
+</ul>
+
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/error-resolutions">Error Resolutions</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/performance-considerations">Performance Considerations</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/faqs">FAQs</a>
+    
+    
+  </li>
+  
+</ul>
+
+</div>
+
+        </div>
+        <div class="col-md-9">
+          <h1 id="step-by-step-marklogic-processor-guide">Step-by-Step MarkLogic Processor Guide</h1>
+
+<h2 id="initial-setup-for-guide">Initial Setup for Guide</h2>
+
+<p>See the <a href="./getting-started">Getting Started page</a> for instructions on setting your environment up for this tutorial.</p>
+
+<h2 id="review-marklogic-database-state">Review MarkLogic Database State</h2>
+
+<p>In order to view the status of the MarkLogic database, we’ll be using the MarkLogic QConsole. You can read more about the tool in the <a href="http://docs.marklogic.com/guide/qconsole/intro">Query Console User Guide</a>.</p>
+
+<p>Go to the MarkLogic QConsole at <a href="http://localhost:8000/qconsole">http://localhost:8000/qconsole</a> and run the following script.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="s1">'use strict'</span><span class="p">;</span>
+
+<span class="kd">let</span> <span class="nx">collection</span> <span class="o">=</span> <span class="s1">'iot-data'</span><span class="p">;</span>
+<span class="kd">let</span> <span class="nx">collectionQuery</span> <span class="o">=</span> <span class="nx">cts</span><span class="p">.</span><span class="nx">collectionQuery</span><span class="p">(</span><span class="nx">collection</span><span class="p">);</span>
+<span class="p">[</span>
+  <span class="s2">`</span><span class="p">${</span><span class="nx">collection</span><span class="p">}</span><span class="s2"> count </span><span class="p">${</span><span class="nx">cts</span><span class="p">.</span><span class="nx">estimate</span><span class="p">(</span><span class="nx">collectionQuery</span><span class="p">)}</span><span class="s2">`</span><span class="p">,</span>
+  <span class="s1">'Sample of data'</span><span class="p">,</span>
+  <span class="nx">fn</span><span class="p">.</span><span class="nx">subsequence</span><span class="p">(</span><span class="nx">cts</span><span class="p">.</span><span class="nx">search</span><span class="p">(</span><span class="nx">collectionQuery</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="p">];</span>
+</code></pre></div></div>
+
+<p>You should see output similar to the following.</p>
+
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">[</span><span class="s2">"iot-data count 0"</span><span class="p">,</span> <span class="s2">"Sample of data"</span><span class="p">,</span> <span class="kc">null</span><span class="p">]</span>
+</code></pre></div></div>
+
+<h2 id="iot-example-dataset">IoT Example Dataset</h2>
+
+<p>For this step-by-step guide we’ll be using compressed aggregate JSON data. The data is a mock-up of IoT power data from different devices. The data can be downloaded <a href="./files/IOT-Data.json.zip">here</a>.</p>
+
+<p>Go to the NiFi interface at <a href="http://localhost:8080/nifi">http://localhost:8080/nifi</a>.</p>
+
+<h2 id="setup-marklogicdatabaseclientservice">Setup MarkLogicDatabaseClientService</h2>
+
+<p>In the NiFi UI, click the <i class="fas fa-cog"> cog</i> in the lower left of the screen to configure the NiFi flow. In the new modal select the <code class="highlighter-rouge">CONTROLLER SERVICES</code> tab. Click the <code class="highlighter-rouge">+</code> button on the right and filter for the type <code class="highlighter-rouge">DefaultMarkLogicDatabaseClientService</code> and double-click the Controller Service Type in the table results.</p>
+
+<p>Now click on the <i class="fas fa-cog"> cog</i> next to our new Controller Service and go to the <code class="highlighter-rouge">PROPERTIES</code> tab. Now ensure MarkLogic credentials are added and the other properties are set to their expected values.</p>
+
+<p>Click the <code class="highlighter-rouge">APPLY</code> button and then select the <i class="fas fa-bolt"> lightning bolt</i> next to the Controller Service to enable it.</p>
+
+<p><img src="/nifi/images/marklogic-controller-service.gif" alt="MarkLogic Controller Service Setup" /></p>
+
+<h2 id="marklogic-put-processor">MarkLogic Put Processor</h2>
+
+<p>First, we’ll step through using the <code class="highlighter-rouge">PutMarkLogic</code> processor. The following are detailed steps. If you’d like to skip through the detailed setup, you can import the <a href="./files/PutMarkLogicExample.xml">NiFi template</a> and fill in the key following key information:</p>
+
+<ul>
+  <li>Folder location of the <code class="highlighter-rouge">IOT-Data.json.zip</code> in the ListFile configuration</li>
+  <li>MarkLogic credentials to the DatabaseClient Service associated with the PutMarkLogic Processor</li>
+</ul>
+
+<h3 id="add-listfile-processor">Add ListFile Processor</h3>
+
+<p>Drag the Processor icon next the NiFi logo into the template grid. Filter for the <code class="highlighter-rouge">ListFile</code> Processor click the <code class="highlighter-rouge">ADD</code> button.</p>
+
+<p>With the <code class="highlighter-rouge">ListFile</code> Processor on your grid, right-click the processor select <i class="fas fa-cog"> Configure</i> from the menu. On the <code class="highlighter-rouge">PROPERTIES</code> tab, set the <strong>Input Directory</strong> property the directory where <code class="highlighter-rouge">IOT-Data.json.zip</code> lives. If other files are in the same directory, you’ll also want to set the <strong>File Filter</strong> to the filename <code class="highlighter-rouge">IOT-Data.json.zip</code> to ensure additional files aren’t processed.</p>
+
+<h3 id="add-fetchfile-processor">Add FetchFile Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">FetchFile</code> processor to the grid and go to the processors configure screen. On the <code class="highlighter-rouge">SETTINGS</code> tab, select the check boxes to automatically terminate the <code class="highlighter-rouge">failure</code>, <code class="highlighter-rouge">not.found</code> and <code class="highlighter-rouge">permission.denied</code> relationships. Apply those changes.</p>
+
+<p>Click and hold the <code class="highlighter-rouge">ListFile</code> processor and drag an arrow to the <code class="highlighter-rouge">FetchFile</code> processor. A modal will appear with details of the new relationship you are creating. Click the <code class="highlighter-rouge">ADD</code> button.</p>
+
+<h3 id="add-unpackcontent-processor">Add UnpackContent Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">UnpackContent</code> Processor to the grid. Configure the processor so that the <code class="highlighter-rouge">failure</code> and <code class="highlighter-rouge">original</code> relationships are automatically terminated and set the <code class="highlighter-rouge">Packaging Format</code> property to <code class="highlighter-rouge">zip</code>.</p>
+
+<p>Add a <code class="highlighter-rouge">success</code> relationship from the <code class="highlighter-rouge">FetchFile</code> processor to the <code class="highlighter-rouge">UnpackContent</code> processor.</p>
+
+<h3 id="add-splittext-processor">Add SplitText Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">SplitText</code> Processor to the grid. Configure the processor so that the <code class="highlighter-rouge">failure</code> and <code class="highlighter-rouge">original</code> relationships are automatically terminated and set the <code class="highlighter-rouge">Line Split Count</code> property to <code class="highlighter-rouge">1</code>.</p>
+
+<p>Add a <code class="highlighter-rouge">success</code> relationship from the <code class="highlighter-rouge">UnpackContent</code> processor to the <code class="highlighter-rouge">SplitText</code> processor.</p>
+
+<h3 id="add-putmarklogic-processor">Add PutMarkLogic Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">PutMarkLogic</code> Processor to the grid. Configure the processor so that the <code class="highlighter-rouge">failure</code> and <code class="highlighter-rouge">success</code> relationships are automatically terminated.</p>
+
+<p>Set the <code class="highlighter-rouge">DatabaseClient Service</code> to the Controller Service we created previously in <a href="#setup-marklogicdatabaseclientservice">Setup MarkLogicDatabaseClientService</a>.</p>
+
+<p>Set <code class="highlighter-rouge">Collections</code> to <code class="highlighter-rouge">iot-data</code>, <code class="highlighter-rouge">URI Prefix</code> to <code class="highlighter-rouge">/</code>, and <code class="highlighter-rouge">URI Suffix</code> to <code class="highlighter-rouge">.json</code>.</p>
+
+<p>Add a <code class="highlighter-rouge">split</code> relationship from the <code class="highlighter-rouge">SplitText</code> processor to the <code class="highlighter-rouge">PutMarkLogic</code> processor.</p>
+
+<p>For more details on the available properties, see <a href="./nifi-features#putmarklogic-processor">PutMarkLogic Processor</a>.</p>
+
+<h3 id="run-ingest">Run Ingest</h3>
+
+<p>Hold the <code class="highlighter-rouge">shift</code> key and click and drag to select all the processors on the grid. In the lower left select the <i class="fas fa-play"> Play</i> button to start ingest.</p>
+
+<p>After some time to allow the data to be ingested, go back to QConsole and run the script in <a href="#review-marklogic-database-state">Review MarkLogic Database State</a> to see the ingested documents.</p>
+
+<h2 id="marklogic-query-processor">MarkLogic Query Processor</h2>
+
+<p>This section will cover the <code class="highlighter-rouge">QueryMarkLogic</code> processor. The following are detailed steps. If you’d like to skip through the detailed setup, you can import the <a href="./files/QueryMarkLogicExample.xml">NiFi template</a> and fill in the key following key information:</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Directory</code> and <code class="highlighter-rouge">Owner</code> properties of the <code class="highlighter-rouge">PutFile</code> processor</li>
+  <li>MarkLogic credentials to the DatabaseClient Service associated with the <code class="highlighter-rouge">QueryMarkLogic</code> Processor</li>
+</ul>
+
+<h3 id="add-querymarklogic-processor">Add QueryMarkLogic Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">QueryMarkLogic</code> Processor to the grid. Configure the processor so that the <code class="highlighter-rouge">Query Type</code> property is set to <code class="highlighter-rouge">Collection Query</code>, the <code class="highlighter-rouge">Query</code> property to <code class="highlighter-rouge">iot-data</code>, and set the <code class="highlighter-rouge">DatabaseClient Service</code> to the Controller Service we created previously in <a href="#setup-marklogicdatabaseclientservice">Setup MarkLogicDatabaseClientService</a>.</p>
+
+<h4 id="different-query-approaches">Different Query Approaches</h4>
+
+<p>There are other <code class="highlighter-rouge">Query Type</code> options that can be used. Below are examples of <code class="highlighter-rouge">Query</code> property values for each of those <code class="highlighter-rouge">Query Type</code> options. See <a href="#additional-query-templates">Additional Query Templates</a> for templates with the different approaches.</p>
+
+<h5 id="combined-query-json">Combined Query (JSON)</h5>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span> <span class="s2">"ctsquery"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"collectionQuery"</span><span class="p">:</span> <span class="p">{</span> <span class="s2">"uris"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"iot-data"</span><span class="p">]</span> <span class="p">}</span> <span class="p">}</span> <span class="p">}</span>
+</code></pre></div></div>
+<h5 id="combined-query-xml">Combined Query (XML)</h5>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;cts:collection-query</span> <span class="na">xmlns:cts=</span><span class="s">"http://marklogic.com/cts"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;cts:uri&gt;</span>iot-data<span class="nt">&lt;/cts:uri&gt;</span>
+<span class="nt">&lt;/cts:collection-query&gt;</span>
+</code></pre></div></div>
+<h5 id="string-query">String Query</h5>
+
+<p><code class="highlighter-rouge">Refrigerator</code></p>
+
+<h5 id="structured-query-json">Structured Query (JSON)</h5>
+<div class="language-javascript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">{</span>
+  <span class="s2">"query"</span><span class="p">:</span> <span class="p">{</span>
+    <span class="s2">"queries"</span><span class="p">:</span> <span class="p">[{</span>
+      <span class="s2">"collection-query"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"uri"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"iot-data"</span><span class="p">]</span>
+      <span class="p">}</span>
+    <span class="p">}]</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h5 id="structured-query-xml">Structured Query (XML)</h5>
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;query</span> <span class="na">xmlns=</span><span class="s">"http://marklogic.com/appservices/search"</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;collection-query&gt;</span>
+    <span class="nt">&lt;uri&gt;</span>iot-data<span class="nt">&lt;/uri&gt;</span>
+  <span class="nt">&lt;/collection-query&gt;</span>
+<span class="nt">&lt;/query&gt;</span>
+</code></pre></div></div>
+<p>For more details on the available properties, see <a href="./nifi-features#querymarklogic-processor">QueryMarkLogic Processor</a>.</p>
+
+<h3 id="add-updateattribute-processor">Add UpdateAttribute Processor</h3>
+
+<p>Add the <code class="highlighter-rouge">UpdateAttribute</code> Processor to the grid. This will let us place the document as direct children in the directory we are outputting to. Configure the processor by adding the <code class="highlighter-rouge">filename</code> property to <code class="highlighter-rouge">${filename:substringAfterLast('/')}</code>. The property value uses the <a href="https://nifi.apache.org/docs/nifi-docs/html/expression-language-guide.html">NiFi Expression Language</a> to trim down <code class="highlighter-rouge">filename</code> property of the FlowFile down to just the local name.</p>
+
+<p>Add a <code class="highlighter-rouge">success</code> relationship from the <code class="highlighter-rouge">QueryMarkLogic</code> processor to the <code class="highlighter-rouge">UpdateAttribute</code> processor.</p>
+
+<h3 id="add-putfile-processor">Add PutFile Processor</h3>
+<p>Add the <code class="highlighter-rouge">PutFile</code> Processor to the grid. Configure the processor so that the <code class="highlighter-rouge">failure</code> and <code class="highlighter-rouge">success</code> relationships are automatically terminated.</p>
+
+<p>Set <code class="highlighter-rouge">Directory</code> to the desired output directory, <code class="highlighter-rouge">URI Prefix</code> to <code class="highlighter-rouge">/</code>, and <code class="highlighter-rouge">URI Suffix</code> to <code class="highlighter-rouge">.json</code>.</p>
+
+<p>Add a <code class="highlighter-rouge">success</code> relationship from the <code class="highlighter-rouge">UpdateAttribute</code> processor to the <code class="highlighter-rouge">PutFile</code> processor.</p>
+
+<h3 id="run-export">Run Export</h3>
+
+<p>Hold the <code class="highlighter-rouge">shift</code> key and click and drag to select all the processors on the grid. In the lower left select the <i class="fas fa-play"> Play</i> button to start ingest.</p>
+
+<p>After some time to allow the data to be exported, go to the output directory to see the exported documents.</p>
+
+<h3 id="additional-query-templates">Additional Query Templates</h3>
+
+<ul>
+  <li><a href="./files/QueryMarkLogicExampleStructuredXML.xml">Structured XML Query Template</a></li>
+  <li><a href="./files/QueryMarkLogicExampleStructuredJSON.xml">Structured JSON Query Template</a></li>
+  <li><a href="./files/QueryMarkLogicExampleCombinedXML.xml">Combined XML Query Template</a></li>
+  <li><a href="./files/QueryMarkLogicExampleCombinedJSON.xml">Combined JSON Query Template</a></li>
+  <li><a href="./files/QueryMarkLogicExampleString.xml">String Query Template</a></li>
+</ul>
+
+
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>
+                    Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!--[if lt IE 9]>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="/nifi/assets/bundle.js" id="1"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-79716597-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </body>
+</html>
+

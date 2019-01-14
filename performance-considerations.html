@@ -1,0 +1,828 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <title>Performance Considerations - MarkLogic NiFi Processors</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Favicons -->
+    <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="/nifi/favicon.ico">
+    <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6638631-15', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1879746318909687'); // Insert your pixel ID here.
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- DO NOT MODIFY -->
+    <!-- End Facebook Pixel Code -->
+    <link type="text/css" rel="stylesheet" href="/nifi/assets/bundle.css">
+</head>
+<body class="">
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/nifi">
+                  <span class="logo">
+                    <img src="/nifi/images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                  </span>
+                  MarkLogic NiFi Processors
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    
+                        <li  >
+                            
+                            <a href="/nifi/getting-started">Getting Started</a>
+                            
+                        </li>
+                    
+                        <li  >
+                            
+                            <a href="https://github.com/marklogic/nifi">GitHub</a>
+                            
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+  <div class="panel-heading">Navigation</div>
+  <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/">Introduction</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/getting-started">Getting Started</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/step-by-step">Step-by-Step Guide</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/nifi-features">NiFi Features</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/cookbook-recipes">Cookbook Recipes</a>
+    
+    
+      <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/get-data-from-a-relational-database">Relational Database to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/file-system-to-marklogic">File System to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/run-data-hub-input-flow">Run Data Hub Input Flow</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/step-by-step#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/bulk-record-insert-into-marklogic">Bulk Record Insert Into MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/dhf-with-smart-mastering">DHF With Smart Mastering</a>
+    
+    
+  </li>
+  
+</ul>
+
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/error-resolutions">Error Resolutions</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item active"  >
+    
+    <a href="/nifi/performance-considerations">Performance Considerations</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/faqs">FAQs</a>
+    
+    
+  </li>
+  
+</ul>
+
+</div>
+
+        </div>
+        <div class="col-md-9">
+          <h2 id="performance-considerations">Performance Considerations</h2>
+
+<h1 id="introduction"><a name="__RefHeading__770_1654017897"></a><a name="_Toc528406969"></a>Introduction</h1>
+
+<p>Apache NiFi is an outstanding tool for moving and manipulating a multitude of data sources. It provides a robust interface for monitoring data as it moves through the configured NiFi system as well as the ability to view data provenance during each step.</p>
+
+<p>While NiFi can be extremely performant in transitioning data from one source to another, it can be tricky to configure for optimal performance. This writeup will attempt to explain some of the basic and “advanced” configuration options and performance considerations in an effort to help developers configure the system for optimal performance.</p>
+
+<p>Note: the vast majority of this information can be found by searching the web for various topics regarding NiFi. The information here attempts to provide a relatively consolidation of many of these sorts of posting found on the web.</p>
+
+<h1 id="topics-for-discussion"><a name="__RefHeading__772_1654017897"></a><a name="_Toc528406970"></a>Topics for Discussion</h1>
+
+<p><strong><a href="#__RefHeading__770_1654017897">Introduction</a></strong></p>
+
+<p><strong><a href="#__RefHeading__772_1654017897">Topics for Discussion</a></strong></p>
+
+<p><strong><a href="#__RefHeading__774_1654017897">NiFi Configuration Files</a></strong></p>
+
+<ul>
+  <li>
+    <p><strong><a href="#__RefHeading__776_1654017897">Bootstrap.conf</a></strong></p>
+
+    <ul>
+      <li>
+        <p><a href="#__RefHeading__778_1654017897">JVM Memory Settings</a></p>
+      </li>
+      <li>
+        <p><a href="#__RefHeading__780_1654017897">Garbage Collection</a></p>
+      </li>
+      <li>
+        <p><a href="#__RefHeading__782_1654017897">Running Java 8 or Later?</a></p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__784_1654017897">nifi.properties</a></strong></p>
+  </li>
+</ul>
+
+<p><strong><a href="#__RefHeading__786_1654017897">NiFi Repositories</a></strong></p>
+
+<ul>
+  <li>
+    <p><strong><a href="#__RefHeading__788_1654017897">Flow File Repository</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__790_1654017897">Database Repository</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__792_1654017897">Content Repository</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__794_1654017897">Provenance Repository</a></strong></p>
+  </li>
+</ul>
+
+<p><strong><a href="#__RefHeading__796_1654017897">NiFi Clustering</a></strong></p>
+
+<ul>
+  <li><strong><a href="#__RefHeading__798_1654017897">Clustering Considerations</a></strong></li>
+</ul>
+
+<p><strong><a href="#__RefHeading__800_1654017897">Tips &amp; Tricks</a></strong></p>
+
+<ul>
+  <li>
+    <p><strong><a href="#assigning-threads-to-nifi">Assigning Threads to NiFi</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__802_1654017897">Avoid Unnecessary File Modifications</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__804_1654017897">Dataflow Optimization</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__806_1654017897">Handling Large Files</a></strong></p>
+  </li>
+  <li>
+    <p><strong><a href="#__RefHeading__808_1654017897">Handling Disconnected Nodes</a></strong></p>
+  </li>
+</ul>
+
+<p><strong><a href="#__RefHeading__810_1654017897">Figures</a></strong></p>
+
+<h1 id="nifi-configuration-files"><a name="__RefHeading__774_1654017897"></a><a name="_Toc528406971"></a>NiFi Configuration Files</h1>
+
+<p>NiFi contains basically two configuration files (<code class="highlighter-rouge">bootstrap.conf</code> &amp; <code class="highlighter-rouge">nifi.properties</code>) and they live in the <code class="highlighter-rouge">conf</code> folder. These files allow you to provide basic settings for the NiFi application itself as well as the JVM environment NiFi runs in.</p>
+
+<h2 id="bootstrapconf"><a name="__RefHeading__776_1654017897"></a><a name="_Toc528406972"></a>Bootstrap.conf</h2>
+
+<p>As mentioned earlier, the bootstrap.conf file contains various configuration settings allowing you to optimize the JVM environment for NiFi. Based upon the server capabilities (i.e. memory, processing speed, threads available, OS, etc.) you can tweak the JVM settings to get the most out of available system resources.</p>
+
+<h3 id="jvm-memory-settings"><a name="__RefHeading__778_1654017897"></a><a name="_Toc528406973"></a>JVM Memory Settings</h3>
+
+<table width="811" border="1" bordercolor="#00000a" cellpadding="8" cellspacing="0"><colgroup><col width="345" /> <col width="433" /></colgroup>
+
+<tbody>
+
+<tr valign="TOP">
+
+<td width="345">
+
+Argument
+
+</td>
+
+<td width="433">
+
+Description
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="345">
+
+<font face="Courier New, serif">java.arg.2=-Xms512m</font>
+
+</td>
+
+<td width="433">
+
+Controls the minimum (or starting) amount of memory dedicated to the JVM heap space
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="345">
+
+<font face="Courier New, serif">java.arg.3=-Xmx512m</font>
+
+</td>
+
+<td width="433">
+
+Controls the maximum amount of memory allowed to be consumed by the JVM
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<p>Keep in mind that the more flow files you anticipate having in flight at any one time will require increasing these settings. Additionally, if you’re incorporating processors into your NiFi flow that are resource intensive, you may also want to consider increasing these values. To evaluate if you have enough memory allocated to the JVM you can open up the System Diagnostics pane and view how much memory is being used at any given time along with how much space your flow files are taking up. Click the “Hamburger” menu at the top right of the NiFi UI and select Summary. Then on the bottom right side of the pane, click system diagnostics.<br />
+<img src="./images/performance-considerations/m24de6d32.png" alt="" /></p>
+
+<h3 id="garbage-collection"><a name="__RefHeading__780_1654017897"></a><a name="_Toc528406974"></a>Garbage Collection</h3>
+
+<table width="825" border="1" bordercolor="#00000a" cellpadding="8" cellspacing="0"><colgroup><col width="344" /> <col width="447" /></colgroup>
+
+<tbody>
+
+<tr valign="TOP">
+
+<td width="344">
+
+Argument
+
+</td>
+
+<td width="447">
+
+Description
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="344">
+
+<font face="Courier New, serif">java.arg.13=-XX:+UseG1GC</font>
+
+</td>
+
+<td width="447">
+
+This setting tells the JVM which Garbage Collection to use during runtime. Recent versions of NiFi current use the configuration above, but older ones may not so it’s best to validate this setting while also considering the version of Java you’re running to ensure whatever setting you choose is compatible. Keep in mind that smaller Java Memory Heap settings may result in more frequent garbage collection being performed.
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<h3 id="running-java-8-or-later"><a name="__RefHeading__782_1654017897"></a><a name="_Toc528406975"></a>Running Java 8 or Later?</h3>
+
+<p>Consider adding the following lines to your bootstrap.conf file</p>
+
+<table width="825" border="1" bordercolor="#00000a" cellpadding="8" cellspacing="0"><colgroup><col width="350" /> <col width="441" /></colgroup>
+
+<tbody>
+
+<tr valign="TOP">
+
+<td width="350">
+
+Argument
+
+</td>
+
+<td width="441">
+
+Description
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="350">
+
+<font face="Courier New, serif">java.arg.7=-XX:ReservedCodeCacheSize=256m</font>
+
+</td>
+
+<td width="441">
+
+Helps to prevent compiler from switching off when the code cache fills up
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="350">
+
+<font face="Courier New, serif">java.arg.8=-XX:CodeCacheMinimumFreeSpace=10m</font>
+
+</td>
+
+<td rowspan="2" width="441">
+
+Establishes a boundary for how much of the code cache can be used before flushing of the code cache will occur to prevent it from filling and resulting in the stoppage of the compiler
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="350">
+
+<font face="Courier New, serif">java.arg.9=-XX:+UseCodeCacheFlushing</font>
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<h2 id="nifiproperties"><a name="__RefHeading__784_1654017897"></a><a name="_Toc528406976"></a>nifi.properties</h2>
+
+<p>Most of these settings described below are the default values for an OOTB NiFi instance. You should still validate these settings.</p>
+
+<table width="825" border="1" bordercolor="#00000a" cellpadding="8" cellspacing="0"><colgroup><col width="382" /> <col width="409" /></colgroup>
+
+<tbody>
+
+<tr valign="TOP">
+
+<td width="382">
+
+Argument
+
+</td>
+
+<td width="409">
+
+Description
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.bored.yield.duration=10 millis</font>
+
+</td>
+
+<td width="409">
+
+Designed to help with CPU utilization by preventing processors using the timer driven scheduling strategy from using excessive CPU when there is no work to do. Smaller values equate to lower latency but higher CPU utilization. Increasing this value will cut down overall CPU utilization.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.ui.autorefresh.interval=30 sec</font>
+
+</td>
+
+<td width="409">
+
+Controls the interval between refreshing the latest statistics, bulletins, and flow revisions in the browser
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.database.directory=./database_repository</font>
+
+</td>
+
+<td width="409">
+
+Recommend moving the location of this repo to outside the root directory of NiFi to simplify upgrading to future NiFi version. See <a href="#_Database_Repository">Database Repository</a> section for additional information.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.flowfile.repository.directory=./flowfile_repository</font>
+
+</td>
+
+<td width="409">
+
+Recommend moving the location of this repo to outside the root directory of NiFi to simplify upgrading to future NiFi version. See <a href="#_Flow_File_Repository">Flowfile Repository</a> section for additional information
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.content.repository.directory.default=./content_repository</font>
+
+</td>
+
+<td width="409">
+
+Recommend moving the location of this repo to outside the root directory of NiFi to simplify upgrading to future NiFi version. See <a href="#_Content_Repository">Content Repository</a> section for additional information.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.provenance.repository.directory.default=./provenance_repository</font>
+
+</td>
+
+<td width="409">
+
+Recommend moving the location of this repo to outside the root directory of NiFi to simplify upgrading to future NiFi version. See <a href="#_Provenance_Repository">Provenance Repository</a> section for additional information.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.queue.swap.threshold=20000</font>
+
+</td>
+
+<td width="409">
+
+This setting sets the default maximum queue size for all queues between NiFi components. Increasing this value will require additional memory be allocated to NiFi since these Flow Files are stored in memory. If a queue exceeds this size, the files are swapped from memory to disk and will later be retrieved when the queue size drops resulting in increased I/O.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.provenance.repository.query.threads=2</font>
+
+</td>
+
+<td width="409">
+
+Adjusts the number of system threads available for searching the Provenance Repository
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.provenance.repository.index.threads=1</font>
+
+</td>
+
+<td width="409">
+
+Adjusts the number of system threads available for indexing the Provenance Repository. If a significant number of Flow Files are being operated upon this setting can become a bottleneck. If you see a warning bulletin stating “The rate of the dataflow is exceeding the provenance recording rate. Slowing down flow to accommodate.” you may need to increase the number of threads available. Remember though that when you increase the number of threads available for one process you reduce the number available for other processes.
+
+</td>
+
+</tr>
+
+<tr valign="TOP">
+
+<td width="382">
+
+<font face="Courier New, serif">nifi.provenance.repository.index.shard.size=500 MB</font>
+
+</td>
+
+<td width="409">
+
+Sets the amount of Java heap space used for Provenance Repository indexing. Larger values will result in better performance and will utilize more Java Heap space.
+
+<em><strong>IMPORTANT</strong>: configured shard size MUST be 50% smaller than the total configured Provenance Repository max storage size (nifi.provenance.repository.max.storage.size)</em>
+
+Only set this value above 500 MB if you have also increased the max storage size above 1 GB.
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<h1 id="nifi-repositories"><a name="__RefHeading__786_1654017897"></a><a name="_Toc528406977"></a><a name="_NiFi_Repositories"></a>NiFi Repositories</h1>
+
+<h2 id="flow-file-repository"><a name="__RefHeading__788_1654017897"></a><a name="_Toc528406978"></a><a name="_Flow_File_Repository"></a>Flow File Repository</h2>
+
+<p>This is the most important repository within NiFi. The Flow File repository contain the information for ALL flow files in flight. Each entry contains all the attributes associated with a given flow file as well as a pointer to where the Flow File’s actual content is stored within the Content Repository. It is a “Write-Ahead Log” of the metadata of each Flow File that currently exist within the system (all modifications are written to a log before they are applied). This repository provides the resiliency necessary to handle system restarts and failures.</p>
+
+<p>It should be noted that Flow Files are never “modified”, but rather the original flow file is maintained during each update/modification to it and a copy is created with the updated version. This technique helps to support robust data provenance throughout the system.</p>
+
+<p>Ideally, this repository should be located on a high-performance RAID that is not shared with other high I/O software and should never be located on the same RAID as the Content or Provenance repositories whenever possible. It should ideally use disk that does not compete for I/O with MarkLogic itself.</p>
+
+<p><em>Note: if this repository become corrupted or runs out of disk space the state of flow files may become permanently lost!</em></p>
+
+<h2 id="database-repository"><a name="__RefHeading__790_1654017897"></a><a name="_Toc528406979"></a><a name="_Database_Repository"></a>Database Repository</h2>
+
+<p>This repository contains 2 H2 Databases. nifi-flow-audit.h2.db is used by NiFi to keep track of all configuration changes made within the NiFi UI &amp; nifi-user-keys.h2.db which is only used when NiFi has been secured and it contains information about who has logged into NiFi.</p>
+
+<h2 id="content-repository"><a name="__RefHeading__792_1654017897"></a><a name="_Toc528406980"></a><a name="_Content_Repository"></a>Content Repository</h2>
+
+<p>The content repository is where the content, to include multiple historical versions of the content (if data archiving has been enabled), pointed to by each Flow File is stored. When a Flow File’s content is determined to be no longer needed the content is either deleted or archived (deletion and archival are configured in the NiFi properties file). NiFi documentation strongly recommends this repository be moved to its own hard disk/RAID. Additional performance gains can be obtained by defining multiple Content Repositories per NiFi instance.</p>
+
+<p>To do this, comment out the <em>nifi.content.repository.directory.default</em> setting and then add a new setting for each Content Repository you want to define (i.e. <em>nifi.content.repository.directory.contentS1R1 = …</em>, <em>nifi.content.repository.directory.contentS1R2 = …</em>, <em>nifi.content.repository.directory.contentS1R3 = …</em>).</p>
+
+<p>In this example the <em>S#R#</em> represents the system number and repository number respectively. By splitting the content across multiple disks, you can significantly increase I/O performance while also improving durability in the event of failures.</p>
+
+<h2 id="provenance-repository"><a name="__RefHeading__794_1654017897"></a><a name="_Toc528406981"></a><a name="_Provenance_Repository"></a>Provenance Repository</h2>
+
+<p>This repository contains the historical records for each Flow File. This is basically the data lineage from the point NiFi created the Flow File to the point when NiFi finished processing the it, aka Chain of Custody, and contains a record of each Flow File modification. It uses a rolling group of 16 provenance log files (default) to track events and increase throughput. The provenance data is stored in a Lucene index broken into multiple shards to support indexing and search.</p>
+
+<p>Data in this repository is updated frequently and results in a lot of disk I/O. As such, you can significantly increase performance and durability by spitting the repository into multiple repositories. See <a href="#_Content_Repository">Content Repository</a> for information on how to accomplish this. Additionally, updating the <em>nifi.provenance.repository.implementation</em> setting in the nifi.properties file to use the <font face="Courier New, serif">org.apache.nifi.provenance.WriteAheadProvenanceRepository</font> instead of the default PersistentProvenanceRepository.</p>
+
+<p>When switching to the WriteAheadProvenanceRepository, you may wish to consider additional changes to the nifi.properties as outlined in the <a href="https://docs.hortonworks.com/HDPDocuments/HDF3/HDF-3.1.1/bk_user-guide/content/system-properties.html">Hortonworks DataFlow Documentation</a>.</p>
+
+<h1 id="nifi-clustering"><a name="__RefHeading__796_1654017897"></a><a name="_Toc528406982"></a>NiFi Clustering</h1>
+
+<p>In large Production deployments, NiFi should be run in a clustered configuration. Doing so effectively multiplies the number of resources available for processing NiFi flows. Therefore, clustering allows NiFi to scale “out.” However, clustering does not provide High Availability, so is purely a scaling approach. If tuning and scaling “up” with more CPU or I/O work, there is no need for the additional complexity of clustering.</p>
+
+<p>Clustering will not have any impact if NiFi is running on a server that is not maxed out and the bottleneck for your process is MarkLogic instead. Clustering is a “scaling” approach to achieve additional throughput, not for achieving higher reliability.</p>
+
+<p>In a clustered environment, each member of the cluster is responsible for processing its own Flow Files and has its own individual <a href="#_NiFi_Repositories">Repositories</a> (discussed above) while sharing the same Flow File flow configuration.</p>
+
+<p>Clustering in NiFi is accomplished by using ZooKeeper. NiFi comes with and embedded ZooKeeper already included in the NiFi distribution.</p>
+
+<ul>
+  <li>
+    <p>ZooKeeper: Provides distributed configuration service, synchronization service, and naming registry for large distributed systems. Is also responsible for electing the Primary Node</p>
+  </li>
+  <li>
+    <p>Zero-Master Configuration: Each node performs the same task but on a different set of data. The elected Master determines what nodes can connect to the cluster based upon the node’s configured FlowFile. Each node within the cluster sends a Heartbeat status to the Master node</p>
+  </li>
+  <li>
+    <p>Cluster Coordinator: Responsible for carrying out the tasks to manage which nodes are allowed to join the cluster and provides the most up to date data flow to new nodes joining the cluster</p>
+  </li>
+</ul>
+
+<h2 id="clustering-considerations"><a name="__RefHeading__798_1654017897"></a><a name="_Toc528406983"></a>Clustering Considerations</h2>
+
+<ul>
+  <li>
+    <p>When a node within the cluster goes down or becomes disconnected from the cluster, the remaining nodes DO NOT pick up or process the Flow Files from the missing node since each node is responsible for handling its own set of the data. That said, when the failed/disconnected node comes back online and joins the cluster, it will resume processing its own Flow Files (assuming there are no catastrophic failure such as a corrupted Flow File Repository or running out of disk space).</p>
+  </li>
+  <li>
+    <p>High Availability (from the point of Automatic Failover) is not currently natively supported. However, HA could be set up using an external system to monitor nodes within the cluster and then when one node goes down, a backup node could be brought online. As long as the new node coming online references the failed node’s repositories and flow file configuration, it should be able to join the cluster. (note this is a presumption, but has not been validated) See <a href="#_Screen_Shots">Figure 3</a> for a conceptual diagram of attempting HA.</p>
+  </li>
+  <li>
+    <p>See <em>Figure</em> 1 <em>- Data Distribution in NiFi Cluster</em> in the <a href="#_Screen_Shots">Screen Shots</a> section for a representation of distributing data across a NiFi clustered environment. In the screen shot, you’ll notice a DistributeLoad processor distributing unique flow files to each of the three HTTPInvoke processors. Each one is responsible for sending data from the Primary node to all other nodes within the cluster (including the Primary node) Note that the DistributeLoad and InvokeHTTP processors only run on the Primary node. The single ListenHTTP processor runs on all three nodes (including the Primary) and receives the data sent from the Primary.</p>
+  </li>
+</ul>
+
+<h1 id="tips--tricks"><a name="__RefHeading__800_1654017897"></a><a name="_Toc528406984"></a>Tips &amp; Tricks</h1>
+
+<h2 id="assigning-threads-to-nifi">Assigning Threads to NiFi</h2>
+
+<p>When you initially set up NiFi, there is a default number of threads assigned to the host. Specifically, <em>Maximum Timer Driven Thread Count</em> and <em>Maximum Event Driven Thread Count</em>. These settings can be found by clicking the hamburger menu at the top right and selecting <em>Controller Settings</em>. On the <em>General</em> tab you’ll see the two aforementioned settings. Typically, you can leave the <em>Max Event Driven Thread Count</em> setting at 5 since the vast majority of processors are Timer Driven. For the <em>Max Timer Driven Thread Count</em> you’ll want to set this value between 2 – 4 times the number of cores your host has. So, if your host has 30 cores you can set the value to be between 60 &amp; 120.
+These setting configure the maximum number of threads that can be utilized by NiFi across all processors. So, as an example if you set the number of concurrent tasks for a given processor (i.e. 5) when that processor executes it will consume 5 threads of the total allotted for NiFi. All processors will cumulatively consume threads when they execute. Keep in mind that regardless of how many concurrent tasks are configured for all processors, the total concurrent tasks cannot exceed the total number of threads assigned. By increasing the threads as described above, you can dramatically increase NiFi throughput.</p>
+
+<h2 id="avoid-unnecessary-file-modifications"><a name="__RefHeading__802_1654017897"></a><a name="_Toc528406985"></a>Avoid Unnecessary File Modifications</h2>
+
+<p>It is important to understand when your metadata in a FlowFile is changed, vs. when the content referenced by that FlowFile is changed.</p>
+
+<p>If you remember our earlier discussion regarding what Flow Files are comprised of and where their content is stored you’ll see that the actual content is placed on disk in the ContentRepository, with only a pointer to that content residing in the Flow File. If you run a processor that modifies the Flow File’s underlying content, that content must be fetched from disk, updated, copied and then written back to disk. The Flow File’s pointer to the content will be also updated to reference the updated content, requiring a FlowFile disk write. Additionally, additional space is taken up to store the original version of Flow File content as well as the Provenance information.</p>
+
+<h2 id="dataflow-optimization"><a name="__RefHeading__804_1654017897"></a><a name="_Toc528406986"></a>Dataflow Optimization</h2>
+
+<p>Ref: <a href="https://community.hortonworks.com/articles/9782/nifihdf-dataflow-optimization-part-1-of-2.html">NiFi/HDF Dataflow Optimization (Part 1)</a> &amp; (<a href="https://community.hortonworks.com/content/kbentry/9785/nifihdf-dataflow-optimization-part-2-of-2.html">Part 2</a>)</p>
+
+<p>The links above provide excellent insight into some optimizations that can be done to improve NiFi’s performance. No need to copy that information here. Briefly, look for resource exhaustion (I/O or CPU) if your flow is not running fast, or some processor is backing up. If not (there are ample disk and CPU resources) consider adding more threads. But if resources are exhausted, you must optimize the flows, reduce threads, or cluster. More and better details are in the linked web pages.</p>
+
+<h2 id="handling-large-files"><a name="__RefHeading__806_1654017897"></a><a name="_Toc528406987"></a>Handling Large Files</h2>
+
+<p>Large files can take on many forms such as binary video files or text-based files like CSV, JSON, or XML. In the latter case, these files are typically “record-based” such that the single file represents 1 – N individual records. In this case, you should avoid trying to load the entire file into memory and then splitting it into individual flow files. Instead, use a “record-based” processor (i.e. ConvertRecord) that allows the file to be processed using streaming. This will preclude the need to load the entire file into memory. Here is a <a href="https://bryanbende.com/development/2017/06/20/apache-nifi-records-and-schema-registries">blog post</a> explaining the various Record Streaming processors and how to interact with them.</p>
+
+<p>Additional things to consider are:</p>
+
+<ul>
+  <li>
+    <p>Ensure individual nodes have enough memory configured to handle the anticipated number, type, and size of files</p>
+  </li>
+  <li>
+    <p>Ensure the flow file and content repositories have enough disk space to accommodate the anticipated quantity and size of files to be processed</p>
+  </li>
+</ul>
+
+<h2 id="handling-disconnected-nodes"><a name="__RefHeading__808_1654017897"></a><a name="_Toc528406988"></a>Handling Disconnected Nodes</h2>
+
+<p>If a node fails/becomes disconnected from the cluster and is unable to rejoin, look in the <em>nifi-1.x.x/logs</em> directory. The nifi-app.log file will log most all NiFi activity including errors. Here are some thing to look for:</p>
+
+<ul>
+  <li>
+    <p>You may see something indicating the node’s Flow File configuration is out of date. This issue was largely seen with older versions of NiFI (previous to 1.0.0). In this case simply delete or rename the <em>flow.xml.gz</em> file in the <em>conf</em> directory and restart the node. When the node attempts to connect, the Primary Node (i.e. Cluster Coordinator) will see the rejoining node has no Flow File template and will then provide the most current one to that node.</p>
+  </li>
+  <li>
+    <p>Ensure regular heartbeats are being sent to the Cluster Coordinator. If the Cluster Coordinator doesn’t receive regular heartbeats (interval configured in the conf/nifi.properties file) the node sending the heartbeat notifications will become disconnected. The Cluster Coordinator will wait 8x the configured <em>nifi.cluster.protocol.heartbeat.interval</em> before disconnecting a node. This can happen for numerous reasons such as network latency between the node and the Cluster Coordinator or excessive garbage collection. In the latter case, ensure you have configured enough Java Heap Memory for the node.</p>
+  </li>
+</ul>
+
+<h1 id="figures"><a name="__RefHeading__810_1654017897"></a><a name="_Toc528406989"></a><a name="_Screen_Shots"></a>Figures</h1>
+
+<p><em>Figure 2 - Data Distribution in NiFi Cluster</em></p>
+
+<p><img src="./images/performance-considerations/45518d03.png" alt="" /></p>
+
+<p><em>Note: The Decompress HTTP Content processor is only needed if you have configured the PostHTTP processors on the Primary node to perform data compression (Compression Level property)</em></p>
+
+<p><em>Figure 3 - Conceptual HA Diagram</em></p>
+
+<p><img src="./images/performance-considerations/4d5a306c.png" alt="" /></p>
+
+<font color="#404040"><span style="font-style: normal">In the diagram above, conceptually a standby node could be configured to reference the same Repositories as a currently running node as well as referencing the same configurations. When a node fails, the standby node could be brought online referencing all the same configuration and repositories. This, theoretically, could allow for some sort of HA. Note: It is extremely important that only a single node is allowed to run using this configuration. Multiple instances accessing the same repositories and configuration could result in corrupting the repositories.</span></font>
+
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>
+                    Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!--[if lt IE 9]>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="/nifi/assets/bundle.js" id="1"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-79716597-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </body>
+</html>
+

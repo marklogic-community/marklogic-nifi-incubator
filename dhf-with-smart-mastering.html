@@ -1,0 +1,410 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <title>Data Hub Framework With Smart Mastering - MarkLogic NiFi Processors</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <meta content="yes" name="apple-mobile-web-app-capable">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Favicons -->
+    <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="/nifi/favicon.ico">
+    <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-6638631-15', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+
+    <!-- Facebook Pixel Code -->
+    <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+    document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '1879746318909687'); // Insert your pixel ID here.
+    fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+    src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+    /></noscript>
+    <!-- DO NOT MODIFY -->
+    <!-- End Facebook Pixel Code -->
+    <link type="text/css" rel="stylesheet" href="/nifi/assets/bundle.css">
+</head>
+<body class="">
+
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/nifi">
+                  <span class="logo">
+                    <img src="/nifi/images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                  </span>
+                  MarkLogic NiFi Processors
+                </a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right">
+                    
+                        <li  >
+                            
+                            <a href="/nifi/getting-started">Getting Started</a>
+                            
+                        </li>
+                    
+                        <li  >
+                            
+                            <a href="https://github.com/marklogic/nifi">GitHub</a>
+                            
+                        </li>
+                    
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+  <div class="panel-heading">Navigation</div>
+  <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/">Introduction</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/getting-started">Getting Started</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/step-by-step">Step-by-Step Guide</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/nifi-features">NiFi Features</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/cookbook-recipes">Cookbook Recipes</a>
+    
+    
+      <ul class="list-group">
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/get-data-from-a-relational-database">Relational Database to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/file-system-to-marklogic">File System to MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/run-data-hub-input-flow">Run Data Hub Input Flow</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/step-by-step#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/bulk-record-insert-into-marklogic">Bulk Record Insert Into MarkLogic</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item active"  >
+    
+    <a href="/nifi/dhf-with-smart-mastering">DHF With Smart Mastering</a>
+    
+    
+  </li>
+  
+</ul>
+
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/error-resolutions">Error Resolutions</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/performance-considerations">Performance Considerations</a>
+    
+    
+  </li>
+  
+  <li  class="list-group-item"  >
+    
+    <a href="/nifi/faqs">FAQs</a>
+    
+    
+  </li>
+  
+</ul>
+
+</div>
+
+        </div>
+        <div class="col-md-9">
+          <h1 id="data-hub-framework-with-smart-mastering">Data Hub Framework With Smart Mastering</h1>
+
+<p>This recipe steps through using the MarkLogic NiFi Bundle with the Data Hub Framework (DHF) and Smart Mastering.</p>
+
+<p>This cookbook uses the example DHF project in the Smart Mastering version 1.2.2 found <a href="https://github.com/marklogic-community/smart-mastering-core/tree/v1.2.2/examples/dhf-flow">here</a>.</p>
+
+<h2 id="initial-setup">Initial Setup</h2>
+
+<p>For the purpose of having a NiFi flow that covers the end-to-end experience of using DHF and Smart Mastering, we will <em>not</em> be following the steps in the example project README.</p>
+
+<p>Setup the project with:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./gradlew mlDeploy
+./gradlew deployMatchOptions
+./gradlew deployMergeOptions
+</code></pre></div></div>
+
+<p>Load the second organization dataset. The first organization dataset will be loaded via our NiFi flow.</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./gradlew loadOrganizationSource2
+</code></pre></div></div>
+
+<h2 id="nifi-template-overview">NiFi Template Overview</h2>
+
+<p>The template for this cookbook can be downloaded <a href="./files/DataHubAndSmartMasteringMarkLogicFlow.xml">here</a>.</p>
+
+<p>We’ll be loading documents into MarkLogic with the <code class="highlighter-rouge">PutMarklogic</code>processor and the setting the transform to use a DHF input flow. The output of the <code class="highlighter-rouge">batch_success</code> relationship will feed an <code class="highlighter-rouge">ExtensionCallMarkLogic</code> processor that calls DHF REST extension for running a harmonization flow. The <code class="highlighter-rouge">success</code> relationship of the DHF REST call will feed a second <code class="highlighter-rouge">ExtensionCallMarkLogic</code> processor that will call the Smart Mastering REST extension for processing match and merge on a set of documents.</p>
+
+<h2 id="processors">Processors</h2>
+
+<h3 id="listfile">ListFile</h3>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>Schema Output Destination</dt>
+  <dd>/<path-to>/smart-mastering-core/examples/dhf-flow/data/Organizations/Source1/</path-to></dd>
+  <dt>File Filter</dt>
+  <dd>.*\.json</dd>
+</dl>
+
+<p><strong>Settings</strong></p>
+
+<p><em>Default</em></p>
+
+<h3 id="fetchfile">FetchFile</h3>
+
+<p><strong>Properties</strong></p>
+
+<p><em>Default</em></p>
+
+<p><strong>Settings</strong></p>
+
+<dl>
+  <dt>Automatically Terminate Relationships</dt>
+  <dd>failure, not.found, permission.denied</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<p>Link <code class="highlighter-rouge">success</code> from “ListFile” to “FetchFile”</p>
+
+<h3 id="putmarklogic">PutMarkLogic</h3>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>DatabaseClient Service</dt>
+  <dd><em>Staging Database Client</em></dd>
+  <dt>Server Transform</dt>
+  <dd>ml:sjsInputFlow</dd>
+  <dt>URI Prefix</dt>
+  <dd>/organizations/</dd>
+  <dt>URI Suffix</dt>
+  <dd>.json</dd>
+  <dt>trans:entity-name</dt>
+  <dd>Organization</dd>
+  <dt>trans:flow-name</dt>
+  <dd>OrgImportSource1</dd>
+</dl>
+
+<p><strong>Settings</strong></p>
+
+<dl>
+  <dt>Automatically Terminate Relationships</dt>
+  <dd>success, failure</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<p>Link <code class="highlighter-rouge">success</code> from “FetchFile” to “PutMarkLogic”</p>
+
+<h3 id="extensioncallmarklogic-dhf-harmonize">ExtensionCallMarkLogic <em>DHF Harmonize</em></h3>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>DatabaseClient Service</dt>
+  <dd><em>Staging Database Client</em></dd>
+  <dt>Extension Name</dt>
+  <dd>ml:sjsFlow</dd>
+  <dt>Payload Source</dt>
+  <dd>Payload Property</dd>
+  <dt>Payload Format</dt>
+  <dd>JSON</dd>
+  <dt>Payload</dt>
+  <dd>{}</dd>
+  <dt>param:entity-name</dt>
+  <dd>MDM</dd>
+  <dt>param:flow-name</dt>
+  <dd>MDMHarmonizeSJS</dd>
+  <dt>param:target-database</dt>
+  <dd>data-hub-FINAL</dd>
+  <dt>param:identifiers</dt>
+  <dd>${URIs}</dd>
+  <dt>separator:param:identifiers</dt>
+  <dd>,</dd>
+</dl>
+
+<p><strong>Settings</strong></p>
+
+<dl>
+  <dt>Name</dt>
+  <dd>DHF Harmonize</dd>
+  <dt>Automatically Terminate Relationships</dt>
+  <dd>failure</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<p>Link <code class="highlighter-rouge">batch_success</code> from “PutMarkLogic” to “DHF Harmonize”</p>
+
+<h3 id="extensioncallmarklogic-smart-mastering">ExtensionCallMarkLogic <em>Smart Mastering</em></h3>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>DatabaseClient Service</dt>
+  <dd><em>Final Database Client</em></dd>
+  <dt>Extension Name</dt>
+  <dd>sm-match-and-merge</dd>
+  <dt>Payload Source</dt>
+  <dd>None</dd>
+  <dt>Payload Format</dt>
+  <dd>TEXT</dd>
+  <dt>param:options</dt>
+  <dd>org-merge-options</dd>
+  <dt>param:query</dt>
+  <dd>&lt;cts:collection-query xmlns:cts=”http://marklogic.com/cts”&gt;&lt;cts:uri&gt;Organization&lt;/cts:uri&gt;&lt;/cts:collection-query&gt;</dd>
+  <dt>param:uri</dt>
+  <dd>${URIs}</dd>
+  <dt>separator:param:uri</dt>
+  <dd>,</dd>
+</dl>
+
+<p><strong>Settings</strong></p>
+
+<dl>
+  <dt>Name</dt>
+  <dd>Smart Mastering</dd>
+  <dt>Automatically Terminate Relationships</dt>
+  <dd>success, failure</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<p>Link <code class="highlighter-rouge">success</code> from “DHF Harmonize” to “Smart Mastering”</p>
+
+
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>
+                    Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+
+    <!--[if lt IE 9]>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+        <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript" src="/nifi/assets/bundle.js" id="1"></script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-79716597-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+  </body>
+</html>
+
