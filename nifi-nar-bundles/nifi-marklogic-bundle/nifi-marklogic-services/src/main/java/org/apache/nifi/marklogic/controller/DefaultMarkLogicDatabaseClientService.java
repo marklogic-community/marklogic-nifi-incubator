@@ -230,7 +230,7 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
         }
     }
 
-    @Override
+	@Override
     public DatabaseClient getDatabaseClient() {
         return databaseClient;
     }
