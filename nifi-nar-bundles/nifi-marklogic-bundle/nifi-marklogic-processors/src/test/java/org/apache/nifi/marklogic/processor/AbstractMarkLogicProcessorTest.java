@@ -44,7 +44,7 @@ public class AbstractMarkLogicProcessorTest extends Assert {
 
     protected ApplicationContext applicationContext;
 
-    protected void initialize(Processor processor) throws InitializationException {
+    protected void initialize(Processor processor) {
         this.processor = processor;
         processContext = new MockProcessContext(processor);
         initializationContext = new MockProcessorInitializationContext(processor, processContext);
@@ -57,7 +57,12 @@ public class AbstractMarkLogicProcessorTest extends Assert {
         applicationContext = new AnnotationConfigApplicationContext(TestConfig.class);
         TestConfig testConfig = applicationContext.getBean(TestConfig.class);
 
-        runner.addControllerService(databaseClientServiceIdentifier, service);
+        try {
+            runner.addControllerService(databaseClientServiceIdentifier, service);
+        } catch (InitializationException e) {
+            throw new RuntimeException(e);
+        }
+
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.HOST, testConfig.getHost());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.PORT, testConfig.getRestPort().toString());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.USERNAME, testConfig.getUsername());
@@ -72,6 +77,10 @@ public class AbstractMarkLogicProcessorTest extends Assert {
         runner.enableControllerService(service);
         runner.assertValid(service);
         runner.setProperty(PutMarkLogicRecord.DATABASE_CLIENT_SERVICE, databaseClientServiceIdentifier);
+    }
+
+    protected MockFlowFile addTestFlowFile() {
+        return addFlowFile("<test/>");
     }
 
     protected MockFlowFile addFlowFile(String... contents) {
