@@ -390,13 +390,19 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         metadata.withCollections(collections);
 
         // Get permission from processor property definition
-        final String permissionsValue = permissionsProperty.getValue();
+        final String permissionsValue = permissionsProperty.isSet() ?
+            permissionsProperty.evaluateAttributeExpressions(flowFile).getValue() : null;
         final String[] tokens = getArrayFromCommaSeparatedString(permissionsValue);
         if (tokens != null) {
+            DocumentMetadataHandle.DocumentPermissions permissions = metadata.getPermissions();
             for (int i = 0; i < tokens.length; i += 2) {
                 String role = tokens[i];
-                String capability = tokens[i + 1];
-                metadata.withPermission(role, DocumentMetadataHandle.Capability.getValueOf(capability));
+                DocumentMetadataHandle.Capability capability = DocumentMetadataHandle.Capability.getValueOf(tokens[i + 1]);
+                if (permissions.containsKey(role)) {
+                    permissions.get(role).add(capability);
+                } else {
+                    permissions.add(role, capability);
+                }
             }
         }
         String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());

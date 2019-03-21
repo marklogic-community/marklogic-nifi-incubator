@@ -16,6 +16,8 @@
  */
 package org.apache.nifi.marklogic.processor;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.nifi.marklogic.controller.DefaultMarkLogicDatabaseClientService;
@@ -71,7 +73,11 @@ public class AbstractMarkLogicProcessorTest extends Assert {
     }
 
     protected MockFlowFile addFlowFile(String... contents) {
-        MockFlowFile flowFile = processSession.createFlowFile(String.join("\n", contents).getBytes());
+        return addFlowFile(new HashMap(), contents);
+    }
+
+    protected MockFlowFile addFlowFile(Map<String, String> attributes, String... contents) {
+        MockFlowFile flowFile = processSession.createFlowFile(String.join("\n", contents).getBytes(), attributes);
         sharedSessionState.getFlowFileQueue().offer(flowFile);
         return flowFile;
     }
