@@ -136,6 +136,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .defaultValue("rest-reader,read,rest-writer,update")
         .description("Comma-delimited sequence of permissions - role1, capability1, role2, " +
             "capability2 - to add to each document")
+        .expressionLanguageSupported(ExpressionLanguageScope.FLOWFILE_ATTRIBUTES)
         .addValidator(Validator.VALID)
         .required(false)
         .build();
