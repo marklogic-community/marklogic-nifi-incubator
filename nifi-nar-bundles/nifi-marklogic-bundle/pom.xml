@@ -32,8 +32,8 @@
     <properties>
         <nifi.version>1.9.1</nifi.version>
         <marklogicnar.version>1.9.1.1-incubator</marklogicnar.version>
-        <marklogicclientapi.version>4.1.1</marklogicclientapi.version>
-        <mljavaclientutil.version>3.9.0</mljavaclientutil.version>
+        <marklogicclientapi.version>4.2.0</marklogicclientapi.version>
+        <mljavaclientutil.version>3.12.0</mljavaclientutil.version>
         <marklogicdatamovementcomponents.version>1.0</marklogicdatamovementcomponents.version>
     </properties>
 
