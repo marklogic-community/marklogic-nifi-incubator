@@ -221,10 +221,7 @@ public class ExtensionCallMarkLogic extends AbstractMarkLogicProcessor {
                 session.append(flowFile, out -> out.write(result.getContent(new BytesHandle()).get()));
             }
 
-            synchronized(session) {
-                session.transfer(flowFile, SUCCESS);
-                session.commit();
-            }
+            transferAndCommit(session, flowFile, SUCCESS);
         } catch (final Throwable t) {
             this.handleThrowable(t, session);
         }

@@ -112,8 +112,4 @@ public class ApplyTransformMarkLogicIT extends AbstractMarkLogicIT {
         super.teardown();
         deleteDocumentsInCollection(collection);
     }
-    protected TestRunner getNewTestRunner(Class processor) throws InitializationException {
-        TestRunner runner = super.getNewTestRunner(processor);
-        return runner;
-    }
 }

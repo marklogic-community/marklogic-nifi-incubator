@@ -78,7 +78,7 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
         //deleteDocumentsInCollection(collection);
     }
 
-    protected TestRunner getNewTestRunner(Class processor) throws InitializationException {
+    protected TestRunner getNewTestRunner(Class processor) {
         TestRunner runner = super.getNewTestRunner(processor);
         runner.assertNotValid();
         runner.setProperty(QueryMarkLogic.CONSISTENT_SNAPSHOT, "true");

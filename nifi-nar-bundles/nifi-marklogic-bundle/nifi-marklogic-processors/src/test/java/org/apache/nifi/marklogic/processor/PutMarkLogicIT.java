@@ -46,7 +46,7 @@ public class PutMarkLogicIT extends AbstractMarkLogicIT{
         super.teardown();
     }
 
-    public TestRunner getNewTestRunner(Class processor) throws InitializationException {
+    public TestRunner getNewTestRunner(Class processor) {
         TestRunner runner = super.getNewTestRunner(processor);
         runner.setProperty(PutMarkLogic.URI_ATTRIBUTE_NAME, "filename");
         return runner;

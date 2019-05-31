@@ -123,9 +123,13 @@ public class AbstractMarkLogicIT extends AbstractSpringMarkLogicTest {
         }
     }
 
-    protected void addDatabaseClientService(TestRunner runner) throws InitializationException {
+    protected void addDatabaseClientService(TestRunner runner) {
         service = new DefaultMarkLogicDatabaseClientService();
-        runner.addControllerService(databaseClientServiceIdentifier, service);
+        try {
+            runner.addControllerService(databaseClientServiceIdentifier, service);
+        } catch (InitializationException e) {
+            throw new RuntimeException(e);
+        }
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.HOST, testConfig.getHost());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.PORT, testConfig.getRestPort().toString());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.USERNAME, testConfig.getUsername());
@@ -135,7 +139,7 @@ public class AbstractMarkLogicIT extends AbstractSpringMarkLogicTest {
 
     protected void teardown() {}
 
-    protected TestRunner getNewTestRunner(Class processor) throws InitializationException {
+    protected TestRunner getNewTestRunner(Class processor) {
         TestRunner runner = TestRunners.newTestRunner(processor);
         addDatabaseClientService(runner);
         runner.setProperty(AbstractMarkLogicProcessor.BATCH_SIZE, batchSize);
