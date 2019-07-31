@@ -12,12 +12,23 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+
+# MarkLogic NiFi Incubator
+
+This is the MarkLogic NiFi Incubator, supported by the MarkLogic community. It is forked from the MarkLogic NiFi and is intended for developers to be able to contribute to and extend the project for their needs. To learn more about the community project, and get started visit http://marklogic-community.github.io/marklogic-nifi-incubator.
+
+The incubator includes new processors, bug fixes, and extensions to the processors from the MarkLogic NiFi project. It is not supported by MarkLogic Support. For issues with the incubator project, create an issue in the GitHub project.
+
+# MarkLogic NiFi
+
+The official MarkLogic fork of the Apache NiFi project (https://github.com/marklogic/nifi) is available and supported by MarkLogic. More information can be found at https://developer.marklogic.com/features/apache-nifi/.
+
+# Apache NiFi
+
 |Apache NiFi                |  MarkLogic                |
 |:-------------------------:|:-------------------------:|
 |[<img src="https://nifi.apache.org/assets/images/apache-nifi-logo.svg" width="300" height="126" alt="Apache NiFi"/>][nifi]      |  [<img src="https://cdn1.marklogic.com/wp-content/uploads/2017/12/marklogic-logo-footer.svg" width="300" height="126" alt="MarkLogic"/>][marklogic]|
 ____________________
-
-This fork of Apache NiFi is dedicated to developing the MarkLogic NiFi bundle. 
 
 ## Table of Contents
 
