@@ -8,7 +8,7 @@
 
     <!-- Meta -->
     <meta charset="utf-8">
-    <title>MarkLogic NiFi Bundle - MarkLogic NiFi Processors</title>
+    <title>Run Data Hub Harmonize Flow - MarkLogic NiFi Processors</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta content="yes" name="apple-mobile-web-app-capable">
@@ -43,7 +43,7 @@
     /></noscript>
     <!-- DO NOT MODIFY -->
     <!-- End Facebook Pixel Code -->
-    <link type="text/css" rel="stylesheet" href="assets/bundle.css">
+    <link type="text/css" rel="stylesheet" href="assets//bundle.css">
 </head>
 <body class="">
 
@@ -56,9 +56,9 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="/nifi">
                   <span class="logo">
-                    <img src="images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                    <img src="images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
                   </span>
                   MarkLogic NiFi Processors
                 </a>
@@ -94,9 +94,9 @@
   <div class="panel-heading">Navigation</div>
   <ul class="list-group">
 
-  <li  class="list-group-item active"  >
+  <li  class="list-group-item"  >
 
-    <a href="">Introduction</a>
+    <a href="index.html">Introduction</a>
 
 
   </li>
@@ -128,7 +128,7 @@
 
 
       <ul class="list-group">
-  
+
   <li  class="list-group-item"  >
 
     <a href="get-data-from-a-relational-database.html">Relational Database to MarkLogic</a>
@@ -150,19 +150,14 @@
 
   </li>
 
-  <li  class="list-group-item"  >
-
+  <li  class="list-group-item active"  >
     <a href="run-data-hub-harmonize-flow.html">Run Data Hub Harmonize Flow</a>
-
-
   </li>
 
   <li  class="list-group-item"  >
-
     <a href="run-data-hub-flows.html">Run Data Hub Flows (Input and Harmonize)</a>
-
-
   </li>
+
 
   <li  class="list-group-item"  >
 
@@ -217,14 +212,72 @@
 
         </div>
         <div class="col-md-9">
-          <h1 id="marklogic-nifi">MarkLogic NiFi</h1>
+          <h1 id="run-data-hub-harmonize-flow">Run Data Hub Harmonize Flow</h1>
 
-<p>With Apache NiFi, you can use out-of-the-box processors to create data flows from relational databases such as MySQL or Postgres, Apache Kafka data streams and other sources in the Hadoop ecosystem, and many other data sources. If a processor doesn’t exist, you can build your own or you can create templates for common data flow patterns, then publish and share them for others to benefit and collaborate.</p>
+<p>This demo template demonstrates how to use EvaluateCollector Processor with DHF to call the DHF collector module. This template can be used to call the DHF Harmonization flow independently. </p>
 
-<p>The MarkLogic NiFi bundle simplifies integrating MarkLogic into your data management and orchestration strategy.</p>
+<p>The example DHF Tutorial can be found at: <a href="https://marklogic.github.io/marklogic-data-hub/tutorial/4x/">Data Hub Framework Tutorial 4.X</a> This template will follow the Product Entity example from DHF 4.X tutorial.</p>
 
-<h3 id="found-a-bug-have-a-comment">Found a bug? Have a comment?</h3>
-<p><a href="https://github.com/marklogic/nifi/issues/new">File an issue on Github</a> and we will see it.</p>
+<p>You can download the NiFi template <a href="./files/DataHubHarmonizeFlow.xml">here</a>.</p>
+
+<h2 id="processors">Processors</h2>
+
+<h3 id="getfile">EvaluateCollectorMarkLogic</h3>
+
+<p>Evaluate collector module of DGF Harmonize flow</p>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>Database Client Service</dt>
+  <dd>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</dd>
+  <dt>Entity Name</dt>
+  <dd>Product</dd>
+  <dt>Flow Name</dt>
+  <dd>Harmonize Products</dd>
+  <dt><em>Options</em></dt>
+  <dd>{"entity":"Product", "flow":"Harmonize Products","flowType":"harmonize"}</dd>
+  <dt>Batch Size</dt>
+  <dd>100</dd>
+  <dt>Identifiers Attribute Name</dt>
+  <dd>dhf.collector.identifiers</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<dl>
+  <dt>batches</dt>
+  <dd>FlowFiles created from each batch of collected identifiers are routed her</dd>
+</dl>
+
+<h2 id="ExtensionCallMarkLogic">ExtensionCallMarkLogic</h2>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>Database Client Service</dt>
+  <dd>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</dd>
+  <dt>Extension Name</dt>
+  <dd>ml:sjsFlow</dd>
+  <dt>Requires Input</dt>
+  <dd>true</dd>
+  <dt>param:entity-name</dt>
+  <dd>Product</dd>
+  <dt>param:flow-name</dt>
+  <dd>Harmonize Products</dd>
+  <dt>param:identifiers</dt>
+  <dd>${dhf.collector.identifiers}</dd>
+  <dt>param:job-id</dt>
+  <dd>12345678</dd>
+  <dt>param:target-database</dt>
+  <dd>data-hub-FINAL</dd>
+  <dt>separator:param:identifiers </dt>
+  <dd><strong>,</strong></dd>
+</dl>
+
+<h3 id="run-processors">Run Processors</h3>
+
+<p>Select each of the processors and start them.</p>
 
         </div>
       </div>
@@ -247,10 +300,10 @@
 
     <!--[if lt IE 9]>
         <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
-        <script src="js/respond.min.js"></script>
+        <script src="/nifi/js/respond.min.js"></script>
     <![endif]-->
 
-    <script type="text/javascript" src="assets/bundle.js" id="1"></script>
+    <script type="text/javascript" src="assets//bundle.js" id="1"></script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
       (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),

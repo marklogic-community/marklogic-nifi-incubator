@@ -65,19 +65,19 @@
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav navbar-right">
-                    
+
                         <li  >
-                            
+
                             <a href="getting-started.html">Getting Started</a>
-                            
+
                         </li>
-                    
+
                         <li  >
-                            
+
                             <a href="https://github.com/marklogic/nifi">GitHub</a>
-                            
+
                         </li>
-                    
+
                 </ul>
             </div>
         </div>
@@ -93,110 +93,118 @@
           <div class="panel panel-default">
   <div class="panel-heading">Navigation</div>
   <ul class="list-group">
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="index.html">Introduction</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="getting-started.html">Getting Started</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="step-by-step.html">Step-by-Step Guide</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="nifi-features.html">NiFi Features</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="cookbook-recipes.html">Cookbook Recipes</a>
-    
-    
+
+
       <ul class="list-group">
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="get-data-from-a-relational-database.html">Relational Database to MarkLogic</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="file-system-to-marklogic.html">File System to MarkLogic</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item active"  >
-    
+
     <a href="run-data-hub-input-flow.html">Run Data Hub Input Flow</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+    <a href="run-data-hub-harmonize-flow.html">Run Data Hub Harmonize Flow</a>
+  </li>
+
+  <li  class="list-group-item"  >
+    <a href="run-data-hub-flows.html">Run Data Hub Flows (Input and Harmonize)</a>
+  </li>
+
+  <li  class="list-group-item"  >
+
     <a href="step-by-step.html#add-querymarklogic-processor">Extract MarkLogic Documents</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="bulk-record-insert-into-marklogic.html">Bulk Record Insert Into MarkLogic</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="dhf-with-smart-mastering.html">DHF With Smart Mastering</a>
-    
-    
+
+
   </li>
-  
+
 </ul>
 
-    
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="error-resolutions.html">Error Resolutions</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="performance-considerations.html">Performance Considerations</a>
-    
-    
+
+
   </li>
-  
+
   <li  class="list-group-item"  >
-    
+
     <a href="faqs.html">FAQs</a>
-    
-    
+
+
   </li>
-  
+
 </ul>
 
 </div>
@@ -207,7 +215,7 @@
 
 <p>This template demonstrates how to ingest a document and transform it with a Data Hub Framework input flow.</p>
 
-<p>This uses the <a href="https://github.com/marklogic/marklogic-data-hub/tree/4.0.1/examples/online-store">Data Hub Framework online store example</a> as the basis for the template.</p>
+<p>The example DHF Tutorial can be found at: <a href="https://marklogic.github.io/marklogic-data-hub/tutorial/4x/">Data Hub Framework Tutorial 4.X</a> This template will follow the Order Entity example from DHF 4.X tutorial.</p>
 
 <p>You can download the NiFi template <a href="./files/DataHubInputFlow.xml">here</a>.</p>
 
@@ -220,7 +228,7 @@
 <p>These are the parameters that map to properties in PutMarkLogic:</p>
 
 <div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>-output_collections "Order,LoadOrders,input"
--transform_module "/data-hub/4/transforms/mlcp-flow-transform.sjs" 
+-transform_module "/data-hub/4/transforms/mlcp-flow-transform.sjs"
 -transform_param "entity-name=Order,flow-name=Load%20Orders"
 </code></pre></div></div>
 
@@ -238,7 +246,7 @@
 
 <dl>
   <dt>Input Directory</dt>
-  <dd><em>/path/to/marklogic-data-hub</em>/examples/online-store/input/orders</dd>
+  <dd><em>/path/to/</em>/data-hub/input/orders</dd>
   <dt>Keep Source File</dt>
   <dd>true</dd>
 </dl>
@@ -314,37 +322,6 @@
   <dd>failure</dd>
 </dl>
 
-<h3 id="evaluatejsonpath">EvaluateJsonPath</h3>
-
-<p>Store values from JSON in FlowFile properties</p>
-
-<p><strong>Properties</strong></p>
-
-<dl>
-  <dt>Destination</dt>
-  <dd>flowfile-attribute</dd>
-  <dt>order.id <em>(custom property)</em></dt>
-  <dd>$.id</dd>
-  <dt>order.product_id <em>(custom property)</em></dt>
-  <dd>$.product_id</dd>
-</dl>
-
-<p><strong>Settings</strong></p>
-
-<dl>
-  <dt>Automatically Terminate Relationships</dt>
-  <dd>failure, unmatched</dd>
-</dl>
-
-<h3 id="updateattribute">UpdateAttribute</h3>
-<p>Set the MarkLogic URI attribute</p>
-
-<p><strong>Properties</strong></p>
-
-<dl>
-  <dt>marklogic.uri <em>(custom property)</em></dt>
-  <dd>/${order.product_id}/${order.id}.json</dd>
-</dl>
 
 <h3 id="putmarklogic">PutMarkLogic</h3>
 
@@ -352,13 +329,13 @@
 
 <dl>
   <dt>DatabaseClient Service</dt>
-  <dd><em>(MarkLogicClientService, pointing to data-hub-STAGING database and the corresponding HTTP port)</em></dd>
+  <dd><em>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</em></dd>
   <dt>Collections</dt>
   <dd>Order,LoadOrders,input</dd>
   <dt>Server transform</dt>
   <dd>ml:sjsInputFlow</dd>
   <dt>URI attribute name</dt>
-  <dd>marklogic.uri</dd>
+  <dd>uuid</dd>
   <dt>trans:entity-name <em>(custom property)</em></dt>
   <dd>Order</dd>
   <dt>trans:flow-name <em>(custom property)</em></dt>
@@ -402,4 +379,3 @@
     </script>
   </body>
 </html>
-
