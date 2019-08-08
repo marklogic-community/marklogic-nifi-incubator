@@ -151,14 +151,6 @@
   </li>
 
   <li  class="list-group-item"  >
-    <a href="run-data-hub-harmonize-flow.html">Run Data Hub Harmonize Flow</a>
-  </li>
-
-  <li  class="list-group-item"  >
-    <a href="run-data-hub-flows.html">Run Data Hub Flows (Input and Harmonize)</a>
-  </li>
-
-  <li  class="list-group-item"  >
 
     <a href="step-by-step.html#add-querymarklogic-processor">Extract MarkLogic Documents</a>
 
@@ -184,6 +176,23 @@
 
   </li>
 
+  <li  class="list-group-item"  >
+    <a href="cookbook-recipes.html">Community Recipes</a>
+      <ul class="list-group">
+          <li  class="list-group-item"  >
+            <a href="run-data-hub-input-flow-community.html">Run Data Hub Input Flow</a>
+          </li>
+
+          <li  class="list-group-item"  >
+            <a href="run-data-hub-harmonize-flow.html">Run Data Hub Harmonize Flow</a>
+          </li>
+
+          <li  class="list-group-item"  >
+            <a href="run-data-hub-flows.html">Run Data Hub Flows (Input and Harmonize)</a>
+          </li>
+     </ul>
+  </li>
+  
   <li  class="list-group-item"  >
 
     <a href="error-resolutions.html">Error Resolutions</a>
@@ -215,7 +224,7 @@
 
 <p>This template demonstrates how to ingest a document and transform it with a Data Hub Framework input flow.</p>
 
-<p>The example DHF Tutorial can be found at: <a href="https://marklogic.github.io/marklogic-data-hub/tutorial/4x/">Data Hub Framework Tutorial 4.X</a> This template will follow the Order Entity example from DHF 4.X tutorial.</p>
+<p>This uses the <a href="https://github.com/marklogic/marklogic-data-hub/tree/4.0.1/examples/online-store">Data Hub Framework online store example</a> as the basis for the template.</p>
 
 <p>You can download the NiFi template <a href="./files/DataHubInputFlow.xml">here</a>.</p>
 
@@ -246,7 +255,7 @@
 
 <dl>
   <dt>Input Directory</dt>
-  <dd><em>/path/to/</em>/data-hub/input/orders</dd>
+  <dd><em>/path/to/marklogic-data-hub</em>/examples/online-store/input/orders</dd>
   <dt>Keep Source File</dt>
   <dd>true</dd>
 </dl>
@@ -322,6 +331,37 @@
   <dd>failure</dd>
 </dl>
 
+<h3 id="evaluatejsonpath">EvaluateJsonPath</h3>
+
+<p>Store values from JSON in FlowFile properties</p>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>Destination</dt>
+  <dd>flowfile-attribute</dd>
+  <dt>order.id <em>(custom property)</em></dt>
+  <dd>$.id</dd>
+  <dt>order.product_id <em>(custom property)</em></dt>
+  <dd>$.product_id</dd>
+</dl>
+
+<p><strong>Settings</strong></p>
+
+<dl>
+  <dt>Automatically Terminate Relationships</dt>
+  <dd>failure, unmatched</dd>
+</dl>
+
+<h3 id="updateattribute">UpdateAttribute</h3>
+<p>Set the MarkLogic URI attribute</p>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>marklogic.uri <em>(custom property)</em></dt>
+  <dd>/${order.product_id}/${order.id}.json</dd>
+</dl>
 
 <h3 id="putmarklogic">PutMarkLogic</h3>
 
@@ -329,13 +369,13 @@
 
 <dl>
   <dt>DatabaseClient Service</dt>
-  <dd><em>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</em></dd>
+  <dd><em>(MarkLogicClientService, pointing to data-hub-STAGING database and the corresponding HTTP port)</em></dd>
   <dt>Collections</dt>
   <dd>Order,LoadOrders,input</dd>
   <dt>Server transform</dt>
   <dd>ml:sjsInputFlow</dd>
   <dt>URI attribute name</dt>
-  <dd>uuid</dd>
+  <dd>marklogic.uri</dd>
   <dt>trans:entity-name <em>(custom property)</em></dt>
   <dd>Order</dd>
   <dt>trans:flow-name <em>(custom property)</em></dt>
