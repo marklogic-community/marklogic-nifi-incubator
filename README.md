@@ -1,6 +1,6 @@
 # MarkLogic NiFi Incubator
 
-* This incubator has new processors and some fixes or extensions to core MarkLogic processors.
+* This incubator has new processors, community recipes, and some fixes or extensions to core MarkLogic processors.
 
 * This incubator is "ahead" of the supported MarkLogic NiFi product
 
