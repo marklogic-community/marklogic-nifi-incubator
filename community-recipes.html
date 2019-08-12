@@ -8,7 +8,7 @@
 
     <!-- Meta -->
     <meta charset="utf-8">
-    <title>Getting Started - MarkLogic NiFi Processors</title>
+    <title>Community Recipes - MarkLogic NiFi Processors</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta content="yes" name="apple-mobile-web-app-capable">
@@ -43,7 +43,7 @@
     /></noscript>
     <!-- DO NOT MODIFY -->
     <!-- End Facebook Pixel Code -->
-    <link type="text/css" rel="stylesheet" href="assets/bundle.css">
+    <link type="text/css" rel="stylesheet" href="assets//bundle.css">
 </head>
 <body class="">
 
@@ -56,17 +56,17 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="/nifi">
                   <span class="logo">
-                    <img src="images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                    <img src="images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
                   </span>
-                  MarkLogic NiFi Processors
+                  MarkLogic Community NiFi Processors
                 </a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav navbar-right">
 
-                        <li  class="active"  >
+                        <li  >
 
                             <a href="getting-started.html">Getting Started</a>
 
@@ -101,7 +101,7 @@
 
   </li>
 
-  <li  class="list-group-item active"  >
+  <li  class="list-group-item"  >
 
     <a href="getting-started.html">Getting Started</a>
 
@@ -176,7 +176,7 @@
 
   </li>
 
-  <li  class="list-group-item"  >
+  <li  class="list-group-item active" >
     <a href="community-recipes.html">Community Recipes</a>
       <ul class="list-group">
           <li  class="list-group-item"  >
@@ -220,25 +220,27 @@
 
         </div>
         <div class="col-md-9">
-          <h1 id="getting-started">Getting Started</h1>
+          <h1 id="community-recipes">MarkLogic Community Recipes</h1>
 
-<h2 id="install-marklogic">Install MarkLogic</h2>
+<h2 id="data-hub-input-flow"><a href="./run-data-hub-input-flow-community.html">Data Hub-4 Input Flow</a></h2>
 
-<p>Follow the <a href="http://docs.marklogic.com/guide/installation/procedures#id_28962">Installation Guide</a> found on the MarkLogic Documentation site. If you are familiar with the MarkLogic install process you can find the installation files <a href="https://developer.marklogic.com/products">here</a> or you can use an existing MarkLogic installation.</p>
+<p>Use a <a href="https://github.com/marklogic/marklogic-data-hub">MarkLogic Data Hub</a> Input Flow to transform documents while loading.</p>
 
-<h2 id="install-nifi">Install NiFi</h2>
+<p><a href="./run-data-hub-input-flow-community.html">Read More</a></p>
 
-<p>For detailed instructions on the installation process see <a href="https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi">Apache NiFi: Getting Started</a>.</p>
 
-<p>Download the latest binary package from <a href="http://nifi.apache.org/download.html">NiFi’s Download page</a> and uncompress the file to the desired location.</p>
+<h2 id="data-hub-harmonize-flow"><a href="./run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a></h2>
 
-<h2 id="install-marklogic-nifi-processors">Install MarkLogic NiFi Processors</h2>
+<p>Call the DHF Harmonization flow using EvaluateCollector Processor</p>
 
-<p>Add the MarkLogic NiFi nar files to the <code class="highlighter-rouge">&lt;NIFI_HOME&gt;\lib</code> directory. Binaries can be found in the <a href="https://github.com/marklogic/nifi/releases">nifi-nars GitHub repository</a>.</p>
+<p><a href="./run-data-hub-harmonize-flow.html">Read More</a></p>
 
-<h2 id="start-nifi">Start NiFi</h2>
 
-<p>On Windows, run the <code class="highlighter-rouge">bin/run-nifi.bat</code> file. On Mac/*nix systems, run from the terminal <code class="highlighter-rouge">sh bin/nifi.sh start</code>.</p>
+<h2 id="run-data-hub-flows"><a href="./run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a></h2>
+
+<p>Orchestration of DHF input and Harmonize flow in single NiFi template </p>
+
+<p><a href="./run-data-hub-flows.html">Read More</a></p>
 
 
         </div>
