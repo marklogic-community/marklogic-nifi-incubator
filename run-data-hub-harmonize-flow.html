@@ -8,7 +8,7 @@
 
     <!-- Meta -->
     <meta charset="utf-8">
-    <title>Getting Started - MarkLogic NiFi Processors</title>
+    <title>Run Data Hub-4 Harmonize Flow - MarkLogic NiFi Processors</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <meta content="yes" name="apple-mobile-web-app-capable">
@@ -43,7 +43,7 @@
     /></noscript>
     <!-- DO NOT MODIFY -->
     <!-- End Facebook Pixel Code -->
-    <link type="text/css" rel="stylesheet" href="assets/bundle.css">
+    <link type="text/css" rel="stylesheet" href="assets//bundle.css">
 </head>
 <body class="">
 
@@ -56,9 +56,9 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.html">
+                <a class="navbar-brand" href="/nifi">
                   <span class="logo">
-                    <img src="images/logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+                    <img src="images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
                   </span>
                   MarkLogic NiFi Processors
                 </a>
@@ -66,13 +66,13 @@
             <div id="navbar" class="navbar-collapse collapse">
                 <ul class="nav navbar-nav navbar-right">
 
-                        <li  class="active"  >
+                        <li>
 
                             <a href="getting-started.html">Getting Started</a>
 
                         </li>
 
-                        <li  >
+                        <li>
 
                             <a href="https://github.com/marklogic/nifi">GitHub</a>
 
@@ -101,7 +101,7 @@
 
   </li>
 
-  <li  class="list-group-item active"  >
+  <li  class="list-group-item"  >
 
     <a href="getting-started.html">Getting Started</a>
 
@@ -183,7 +183,7 @@
             <a href="run-data-hub-input-flow-community.html">Run Data Hub-4 Input Flow</a>
           </li>
 
-          <li  class="list-group-item"  >
+          <li  class="list-group-item active"  >
             <a href="run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a>
           </li>
 
@@ -220,25 +220,81 @@
 
         </div>
         <div class="col-md-9">
-          <h1 id="getting-started">Getting Started</h1>
+          <h1 id="run-data-hub-harmonize-flow">Run Data Hub-4 Harmonize Flow</h1>
 
-<h2 id="install-marklogic">Install MarkLogic</h2>
+<p>This demo template demonstrates how to use EvaluateCollector Processor with DHF to call the DHF collector module. This template can be used to call the DHF Harmonization flow independently. </p>
 
-<p>Follow the <a href="http://docs.marklogic.com/guide/installation/procedures#id_28962">Installation Guide</a> found on the MarkLogic Documentation site. If you are familiar with the MarkLogic install process you can find the installation files <a href="https://developer.marklogic.com/products">here</a> or you can use an existing MarkLogic installation.</p>
+<p>The example DHF Tutorial can be found at: <a href="https://marklogic.github.io/marklogic-data-hub/tutorial/4x/">Data Hub Framework Tutorial 4.X</a> This template will follow the Product Entity example from DHF 4.X tutorial.</p>
 
-<h2 id="install-nifi">Install NiFi</h2>
+<p>You can download the NiFi template <a href="./files/DataHubHarmonizeFlow.xml">here</a>.</p>
 
-<p>For detailed instructions on the installation process see <a href="https://nifi.apache.org/docs/nifi-docs/html/getting-started.html#downloading-and-installing-nifi">Apache NiFi: Getting Started</a>.</p>
+<p> DHF version : 4.3.1 </p>
+<p> NAR version : MarkLogic NiFi Incubator - TBD </p>
+<p> Apache NiFi version : 1.8.0 </p>
 
-<p>Download the latest binary package from <a href="http://nifi.apache.org/download.html">NiFi’s Download page</a> and uncompress the file to the desired location.</p>
+<h2 id="processors">Processors</h2>
 
-<h2 id="install-marklogic-nifi-processors">Install MarkLogic NiFi Processors</h2>
+<h3 id="getfile">EvaluateCollectorMarkLogic</h3>
 
-<p>Add the MarkLogic NiFi nar files to the <code class="highlighter-rouge">&lt;NIFI_HOME&gt;\lib</code> directory. Binaries can be found in the <a href="https://github.com/marklogic/nifi/releases">nifi-nars GitHub repository</a>.</p>
+<p>Evaluate collector module of DGF Harmonize flow</p>
 
-<h2 id="start-nifi">Start NiFi</h2>
+<p><strong>Properties</strong></p>
 
-<p>On Windows, run the <code class="highlighter-rouge">bin/run-nifi.bat</code> file. On Mac/*nix systems, run from the terminal <code class="highlighter-rouge">sh bin/nifi.sh start</code>.</p>
+<dl>
+  <dt>Database Client Service</dt>
+  <dd>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</dd>
+  <dt>Entity Name</dt>
+  <dd>Product</dd>
+  <dt>Flow Name</dt>
+  <dd>Harmonize Products</dd>
+  <dt><em>Options</em></dt>
+  <dd>{"entity":"Product", "flow":"Harmonize Products","flowType":"harmonize"}</dd>
+  <dt>Batch Size</dt>
+  <dd>100</dd>
+  <dt>Identifiers Attribute Name</dt>
+  <dd>dhf.collector.identifiers</dd>
+</dl>
+
+<p><strong>Relationships</strong></p>
+
+<dl>
+  <dt>batches</dt>
+  <dd>FlowFiles created from each batch of collected identifiers are routed her</dd>
+</dl>
+
+<h3 id="ExtensionCallMarkLogic">ExtensionCallMarkLogic</h3>
+
+<p><strong>Properties</strong></p>
+
+<dl>
+  <dt>Database Client Service</dt>
+  <dd>(MLStagingService, pointing to data-hub-STAGING database and the corresponding HTTP port)</dd>
+  <dt>Extension Name</dt>
+  <dd>ml:sjsFlow</dd>
+  <dt>Requires Input</dt>
+  <dd>true</dd>
+  <dt>param:entity-name</dt>
+  <dd>Product</dd>
+  <dt>param:flow-name</dt>
+  <dd>Harmonize Products</dd>
+  <dt>param:identifiers</dt>
+  <dd>${dhf.collector.identifiers}</dd>
+  <dt>param:job-id</dt>
+  <dd>12345678</dd>
+  <dt>param:target-database</dt>
+  <dd>data-hub-FINAL</dd>
+  <dt>separator:param:identifiers </dt>
+  <dd><strong>,</strong></dd>
+</dl>
+
+<h3 id="run-processors">Run Processors</h3>
+
+<p>Select each of the processors and start them.</p>
+
+
+<h2 id="template">Template</h2>
+
+<p><img src="./images/dhf-harmonize-flow-community-template.jpg" alt="MLCP import command" /></p>
 
 
         </div>
