@@ -17,8 +17,6 @@
 
 package org.apache.nifi.queryrecord;
 
-import java.io.InputStream;
-
 import org.apache.calcite.linq4j.Enumerator;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
@@ -28,7 +26,9 @@ import org.apache.nifi.serialization.RecordReader;
 import org.apache.nifi.serialization.RecordReaderFactory;
 import org.apache.nifi.serialization.record.Record;
 
-public class FlowFileEnumerator<InternalType> implements Enumerator<Object> {
+import java.io.InputStream;
+
+public class FlowFileEnumerator implements Enumerator<Object> {
     private final ProcessSession session;
     private final FlowFile flowFile;
     private final ComponentLog logger;
@@ -57,26 +57,24 @@ public class FlowFileEnumerator<InternalType> implements Enumerator<Object> {
     @Override
     public boolean moveNext() {
         currentRow = null;
-        while (currentRow == null) {
-            try {
-                currentRow = filterColumns(recordParser.nextRecord());
-                break;
-            } catch (final Exception e) {
-                throw new ProcessException("Failed to read next record in stream for " + flowFile + " due to " + e.getMessage(), e);
-            }
-        }
+        try {
+            final Record record = recordParser.nextRecord();
+            if (record == null) {
+                // If we are out of data, close the InputStream. We do this because
+                // Calcite does not necessarily call our close() method.
+                close();
+                try {
+                    onFinish();
+                } catch (final Exception e) {
+                    logger.error("Failed to perform tasks when enumerator was finished", e);
+                }
 
-        if (currentRow == null) {
-            // If we are out of data, close the InputStream. We do this because
-            // Calcite does not necessarily call our close() method.
-            close();
-            try {
-                onFinish();
-            } catch (final Exception e) {
-                logger.error("Failed to perform tasks when enumerator was finished", e);
+                return false;
             }
 
-            return false;
+            currentRow = filterColumns(record);
+        } catch (final Exception e) {
+            throw new ProcessException("Failed to read next record in stream for " + flowFile + " due to " + e.getMessage(), e);
         }
 
         recordsRead++;

@@ -16,26 +16,6 @@
  */
 package org.apache.nifi.controller;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.nifi.attribute.expression.language.StandardPropertyValue;
 import org.apache.nifi.bundle.Bundle;
@@ -58,6 +38,27 @@ import org.apache.nifi.util.file.classloader.ClassLoaderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 public abstract class AbstractComponentNode implements ComponentNode {
     private static final Logger logger = LoggerFactory.getLogger(AbstractComponentNode.class);
 
@@ -71,6 +72,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
     private final String componentCanonicalClass;
     private final ComponentVariableRegistry variableRegistry;
     private final ReloadComponent reloadComponent;
+    private final ExtensionManager extensionManager;
 
     private final AtomicBoolean isExtensionMissing;
 
@@ -82,18 +84,19 @@ public abstract class AbstractComponentNode implements ComponentNode {
     private volatile boolean triggerValidation = true;
 
     public AbstractComponentNode(final String id,
-                                       final ValidationContextFactory validationContextFactory, final ControllerServiceProvider serviceProvider,
-                                       final String componentType, final String componentCanonicalClass, final ComponentVariableRegistry variableRegistry,
-        final ReloadComponent reloadComponent, final ValidationTrigger validationTrigger, final boolean isExtensionMissing) {
+                                 final ValidationContextFactory validationContextFactory, final ControllerServiceProvider serviceProvider,
+                                 final String componentType, final String componentCanonicalClass, final ComponentVariableRegistry variableRegistry,
+                                 final ReloadComponent reloadComponent, final ExtensionManager extensionManager, final ValidationTrigger validationTrigger, final boolean isExtensionMissing) {
         this.id = id;
         this.validationContextFactory = validationContextFactory;
         this.serviceProvider = serviceProvider;
         this.name = new AtomicReference<>(componentType);
         this.componentType = componentType;
         this.componentCanonicalClass = componentCanonicalClass;
+        this.reloadComponent = reloadComponent;
         this.variableRegistry = variableRegistry;
         this.validationTrigger = validationTrigger;
-        this.reloadComponent = reloadComponent;
+        this.extensionManager = extensionManager;
         this.isExtensionMissing = new AtomicBoolean(isExtensionMissing);
     }
 
@@ -171,7 +174,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
         try {
             verifyModifiable();
 
-            try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), id)) {
+            try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), id)) {
                 boolean classpathChanged = false;
                 for (final Map.Entry<String, String> entry : properties.entrySet()) {
                     // determine if any of the property changes require resetting the InstanceClassLoader
@@ -183,7 +186,8 @@ public abstract class AbstractComponentNode implements ComponentNode {
                     if (entry.getKey() != null && entry.getValue() == null) {
                         removeProperty(entry.getKey(), allowRemovalOfRequiredProperties);
                     } else if (entry.getKey() != null) {
-                        setProperty(entry.getKey(), CharacterFilterUtils.filterInvalidXmlCharacters(entry.getValue()));
+                        final String updatedValue = CharacterFilterUtils.filterInvalidXmlCharacters(entry.getValue());
+                        setProperty(entry.getKey(), updatedValue, this.properties::get);
                     }
                 }
 
@@ -200,24 +204,28 @@ public abstract class AbstractComponentNode implements ComponentNode {
                 }
             }
 
-            logger.debug("Resetting Validation State of {} due to setting properties", this);
-            resetValidationState();
+            if (isTriggerValidation()) {
+                logger.debug("Resetting Validation State of {} due to setting properties", this);
+                resetValidationState();
+            } else {
+                logger.debug("Properties set for {} but not resettingn validation state because validation is paused", this);
+            }
         } finally {
             lock.unlock();
         }
     }
 
     // Keep setProperty/removeProperty private so that all calls go through setProperties
-    private void setProperty(final String name, final String value) {
+    private void setProperty(final String name, final String value, final Function<PropertyDescriptor, String> valueToCompareFunction) {
         if (null == name || null == value) {
             throw new IllegalArgumentException("Name or Value can not be null");
         }
 
         final PropertyDescriptor descriptor = getComponent().getPropertyDescriptor(name);
-
+        final String propertyModComparisonValue = valueToCompareFunction.apply(descriptor);
         final String oldValue = properties.put(descriptor, value);
-        if (!value.equals(oldValue)) {
 
+        if (!value.equals(oldValue)) {
             if (descriptor.getControllerServiceDefinition() != null) {
                 if (oldValue != null) {
                     final ControllerServiceNode oldNode = serviceProvider.getControllerServiceNode(oldValue);
@@ -231,7 +239,12 @@ public abstract class AbstractComponentNode implements ComponentNode {
                     newNode.addReference(this);
                 }
             }
+        }
 
+        // In the case of a component "reload", we want to call onPropertyModified when the value is changed from the descriptor's default.
+        // However, we do not want to update any controller service references because those are tied to the ComponentNode. We only want to
+        // allow the newly created component's internal state to be updated.
+        if (!value.equals(propertyModComparisonValue)) {
             try {
                 onPropertyModified(descriptor, oldValue, value);
             } catch (final Exception e) {
@@ -285,7 +298,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
     @Override
     public Map<PropertyDescriptor, String> getProperties() {
-        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getIdentifier())) {
+        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getIdentifier())) {
             final List<PropertyDescriptor> supported = getComponent().getPropertyDescriptors();
             if (supported == null || supported.isEmpty()) {
                 return Collections.unmodifiableMap(properties);
@@ -307,10 +320,12 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
     @Override
     public void refreshProperties() {
-        // use setProperty instead of setProperties so we can bypass the class loading logic
+        // use setProperty instead of setProperties so we can bypass the class loading logic.
+        // Consider value changed if it is different than the PropertyDescriptor's default value because we need to call the #onPropertiesModified
+        // method on the component if the current value is not the default value, since the component itself is being reloaded.
         getProperties().entrySet().stream()
                 .filter(e -> e.getKey() != null && e.getValue() != null)
-                .forEach(e -> setProperty(e.getKey().getName(), e.getValue()));
+                .forEach(e -> setProperty(e.getKey().getName(), e.getValue(), PropertyDescriptor::getDefaultValue));
     }
 
     /**
@@ -365,20 +380,19 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
     @Override
     public String toString() {
-        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getComponent().getIdentifier())) {
+        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getComponent().getIdentifier())) {
             return getComponent().toString();
         }
     }
 
     @Override
-    public final void performValidation() {
-        boolean replaced = false;
-        do {
+    public final ValidationStatus performValidation() {
+        while (true) {
             final ValidationState validationState = getValidationState();
 
             final ValidationContext validationContext = getValidationContext();
             final Collection<ValidationResult> results = new ArrayList<>();
-            try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getIdentifier())) {
+            try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getIdentifier())) {
                 final Collection<ValidationResult> validationResults = computeValidationErrors(validationContext);
                 results.addAll(validationResults);
 
@@ -389,8 +403,11 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
             final ValidationStatus status = results.isEmpty() ? ValidationStatus.VALID : ValidationStatus.INVALID;
             final ValidationState updatedState = new ValidationState(status, results);
-            replaced = replaceValidationState(validationState, updatedState);
-        } while (!replaced);
+            final boolean replaced = replaceValidationState(validationState, updatedState);
+            if (replaced) {
+                return status;
+            }
+        }
     }
 
     protected Collection<ValidationResult> computeValidationErrors(final ValidationContext validationContext) {
@@ -467,23 +484,24 @@ public abstract class AbstractComponentNode implements ComponentNode {
     private ValidationResult validateControllerServiceApi(final PropertyDescriptor descriptor, final ControllerServiceNode controllerServiceNode) {
         final Class<? extends ControllerService> controllerServiceApiClass = descriptor.getControllerServiceDefinition();
         final ClassLoader controllerServiceApiClassLoader = controllerServiceApiClass.getClassLoader();
+        final ExtensionManager extensionManager = serviceProvider.getExtensionManager();
 
         final String serviceId = controllerServiceNode.getIdentifier();
         final String propertyName = descriptor.getDisplayName();
 
-        final Bundle controllerServiceApiBundle = ExtensionManager.getBundle(controllerServiceApiClassLoader);
+        final Bundle controllerServiceApiBundle = extensionManager.getBundle(controllerServiceApiClassLoader);
         if (controllerServiceApiBundle == null) {
             return createInvalidResult(serviceId, propertyName, "Unable to find bundle for ControllerService API class " + controllerServiceApiClass.getCanonicalName());
         }
         final BundleCoordinate controllerServiceApiCoordinate = controllerServiceApiBundle.getBundleDetails().getCoordinate();
 
-        final Bundle controllerServiceBundle = ExtensionManager.getBundle(controllerServiceNode.getBundleCoordinate());
+        final Bundle controllerServiceBundle = extensionManager.getBundle(controllerServiceNode.getBundleCoordinate());
         if (controllerServiceBundle == null) {
             return createInvalidResult(serviceId, propertyName, "Unable to find bundle for coordinate " + controllerServiceNode.getBundleCoordinate());
         }
         final BundleCoordinate controllerServiceCoordinate = controllerServiceBundle.getBundleDetails().getCoordinate();
 
-        final boolean matchesApi = matchesApi(controllerServiceBundle, controllerServiceApiCoordinate);
+        final boolean matchesApi = matchesApi(extensionManager, controllerServiceBundle, controllerServiceApiCoordinate);
 
         if (!matchesApi) {
             final String controllerServiceType = controllerServiceNode.getComponentType();
@@ -518,7 +536,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
      * @param requiredApiCoordinate the controller service API required by the processor
      * @return true if the controller service node has the require API as an ancestor, false otherwise
      */
-    private boolean matchesApi(final Bundle controllerServiceImplBundle, final BundleCoordinate requiredApiCoordinate) {
+    private boolean matchesApi(final ExtensionManager extensionManager, final Bundle controllerServiceImplBundle, final BundleCoordinate requiredApiCoordinate) {
         // start with the coordinate of the controller service for cases where the API and service are in the same bundle
         BundleCoordinate controllerServiceDependencyCoordinate = controllerServiceImplBundle.getBundleDetails().getCoordinate();
 
@@ -531,7 +549,7 @@ public abstract class AbstractComponentNode implements ComponentNode {
             }
 
             // move to the next dependency in the chain, or stop if null
-            final Bundle controllerServiceDependencyBundle = ExtensionManager.getBundle(controllerServiceDependencyCoordinate);
+            final Bundle controllerServiceDependencyBundle = extensionManager.getBundle(controllerServiceDependencyCoordinate);
             if (controllerServiceDependencyBundle == null) {
                 controllerServiceDependencyCoordinate = null;
             } else {
@@ -544,21 +562,21 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
     @Override
     public PropertyDescriptor getPropertyDescriptor(final String name) {
-        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getComponent().getIdentifier())) {
+        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getComponent().getIdentifier())) {
             return getComponent().getPropertyDescriptor(name);
         }
     }
 
     @Override
     public List<PropertyDescriptor> getPropertyDescriptors() {
-        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getComponent().getIdentifier())) {
+        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getComponent().getIdentifier())) {
             return getComponent().getPropertyDescriptors();
         }
     }
 
 
     private final void onPropertyModified(final PropertyDescriptor descriptor, final String oldValue, final String newValue) {
-        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(getComponent().getClass(), getComponent().getIdentifier())) {
+        try (final NarCloseable narCloseable = NarCloseable.withComponentNarLoader(extensionManager, getComponent().getClass(), getComponent().getIdentifier())) {
             getComponent().onPropertyModified(descriptor, oldValue, newValue);
         }
     }
@@ -628,13 +646,8 @@ public abstract class AbstractComponentNode implements ComponentNode {
     public void resumeValidationTrigger() {
         triggerValidation = true;
 
-        final ValidationStatus validationStatus = getValidationStatus();
-        if (validationStatus == ValidationStatus.VALIDATING) {
-            logger.debug("Resuming Triggering of Validation State for {}; status is VALIDATING so will trigger async validation now", this);
-            validationTrigger.triggerAsync(this);
-        } else {
-            logger.debug("Resuming Triggering of Validation State for {}; status is {} so will not trigger async validation now", this, validationStatus);
-        }
+        logger.debug("Resuming Triggering of Validation State for {}; Resetting validation state", this);
+        resetValidationState();
     }
 
     private boolean isTriggerValidation() {
@@ -732,6 +745,10 @@ public abstract class AbstractComponentNode implements ComponentNode {
 
     protected ReloadComponent getReloadComponent() {
         return this.reloadComponent;
+    }
+
+    protected ExtensionManager getExtensionManager() {
+        return this.extensionManager;
     }
 
     @Override

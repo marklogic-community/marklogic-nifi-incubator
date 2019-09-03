@@ -65,7 +65,11 @@ public class StandardStatusSnapshot implements StatusSnapshot {
 
     @Override
     public Long getStatusMetric(final MetricDescriptor<?> descriptor) {
-        return values[descriptor.getMetricIdentifier()];
+        if (descriptor.isCounter()) {
+            return counterValues.get(descriptor);
+        } else {
+            return values[descriptor.getMetricIdentifier()];
+        }
     }
 
     public void setTimestamp(final Date timestamp) {
@@ -74,10 +78,15 @@ public class StandardStatusSnapshot implements StatusSnapshot {
 
 
     public void addStatusMetric(final MetricDescriptor<?> metric, final Long value) {
+        if (metric.isCounter()) {
+            addCounterStatusMetric(metric, value);
+            return;
+        }
+
         values[metric.getMetricIdentifier()] = value;
     }
 
-    public void addCounterStatusMetric(final MetricDescriptor<?> metric, final Long value) {
+    private void addCounterStatusMetric(final MetricDescriptor<?> metric, final Long value) {
         if (counterValues == null) {
             counterValues = new HashMap<>();
         }
