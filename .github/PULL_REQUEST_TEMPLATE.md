@@ -1,13 +1,11 @@
-Thank you for submitting a contribution to Apache NiFi.
+Thank you for submitting a contribution to marklogic-community/marklogic-nifi-incubator.
 
 In order to streamline the review of the contribution we ask you
 to ensure the following steps have been taken:
 
 ### For all changes:
-- [ ] Is there a JIRA ticket associated with this PR? Is it referenced 
+- [ ] Is there a github ticket associated with this PR? Is it referenced 
      in the commit message?
-
-- [ ] Does your PR title start with NIFI-XXXX where XXXX is the JIRA number you are trying to resolve? Pay particular attention to the hyphen "-" character.
 
 - [ ] Has your PR been rebased against the latest commit within the target branch (typically master)?
 
@@ -23,6 +21,3 @@ to ensure the following steps have been taken:
 
 ### For documentation related changes:
 - [ ] Have you ensured that format looks appropriate for the output in which it is rendered?
-
-### Note:
-Please ensure that once the PR is submitted, you check travis-ci for build issues and submit an update to your PR as soon as possible.
