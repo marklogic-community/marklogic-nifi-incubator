@@ -1,0 +1,1 @@
+{"batchSize":100,"threadCount":4,"mapping":{"name":null},"options":{}}
