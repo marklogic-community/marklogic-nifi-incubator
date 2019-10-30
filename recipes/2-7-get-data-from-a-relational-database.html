@@ -1,0 +1,313 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+  <!-- Meta -->
+  <meta charset="utf-8">
+  <title>2-7 Get Data from a Relational Database</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta content="yes" name="apple-mobile-web-app-capable">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Favicons -->
+  <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="favicon.ico">
+  <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-6638631-15', 'auto');
+  ga('send', 'pageview');
+  </script>
+  <!-- Facebook Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1879746318909687'); // Insert your pixel ID here.
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- DO NOT MODIFY -->
+  <!-- End Facebook Pixel Code -->
+  <link type="text/css" rel="stylesheet" href="../assets//bundle.css">
+</head>
+<body class="">
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/nifi">
+          <span class="logo">
+            <img src="../images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+          </span>
+          MarkLogic NiFi Processors
+        </a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li  >
+            <a href="getting-started.html">Getting Started</a>
+          </li>
+          <li>
+            <a href="https://github.com/marklogic-community/marklogic-nifi-incubator">GitHub</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+            <div class="panel-heading">Navigation</div>
+            <ul class="list-group">
+              <li  class="list-group-item"  >
+                <a href="../index.html">Introduction</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../getting-started.html">Getting Started</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../step-by-step.html">Step-by-Step Guide</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../nifi-features.html">NiFi Features</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../cookbook-recipes.html">Cookbook Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../get-data-from-a-relational-database.html">Relational Database to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../file-system-to-marklogic.html">File System to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow.html">Run Data Hub Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../step-by-step.html#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../bulk-record-insert-into-marklogic.html">Bulk Record Insert Into MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../dhf-with-smart-mastering.html">DHF With Smart Mastering</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item" >
+                <a href="../community-recipes.html">Community Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow-community.html">Run Data Hub-4 Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="1-1-read-from-directory-write-ml.html">Read Files from Directory, Write to MarkLogic﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-2-extract-values-from-json-data﻿.html">Extract values from JSON data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-3-extract-values-from-xml-data﻿.html">Extract values from XML data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-4-convert-data-to-utf-8.html">Convert Data To UTF-8</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-5-handling-multiple-types-of-content.html">Handling Multiple Types of Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-6-ingest-line-delimited-json.html">Ingest Line-Delimited JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-7-split-xml-files-into-multiple-documents.html">Split XML Files Into Multiple Documents</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-8-loading-documents-from-compressed-files.html">Loading Documents From Compressed Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-9-generate-documents-from-csv-files.html">Generate Documents from CSV Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-2-load-pdf-as-binary-and-extracted-metadata-as-json.html">Load PDF as Binary and Extracted Metadata as JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-3-call-a-web-service.html">Call a Web Service</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-3-1-augment-xml-content-with-data-from-a-web-service.html">Augment XML content with data from a Web Service</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-4-modify-nifi-attributes-with-custom-scripting.html">Modify NiFi Attributes with Custom Scripting</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-5-get-files-by-ftp.html">Get Files by FTP</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-6-extract-text-from-pdfs-and-office-documents﻿.html">Extract Text from PDFs and Office Documents﻿</a>
+                  </li>
+                  <li class="list-group-item active">
+                    <a href="2-7-get-data-from-a-relational-database.html">Get Data from a Relational Database</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-1-create-view-use-generatetablefetch.html">Create View, use GenerateTableFetch</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-2-count-rows-construct-paged-sql-selects.html">Count Rows, Construct Paged SQL SELECTs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-3-execute-a-sql-query-for-a-nested-array.html">Execute a SQL Query for a Nested Array</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-4-use-executesqltocolumnmaps.html">Use ExecuteSQLToColumnMaps</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-5-column-maps-with-child-query.html">Column Maps with Child Query</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-8-loading-content-and-metadata-from-an-mlcp-archive-file.html">Loading Content and Metadata from an mlcp Archive File</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-9-load-triples.html">Load Triples</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-1-transform-json.html">Transform JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-2-load-data-from-sharepoint.html">Load Data from SharePoint</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-3-invoke-html-tidy-on-html-content.html">Invoke HTML Tidy on HTML Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-4-decrypt-input-csvs.html">Decrypt Input CSVs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-5-read-parquet-files.html">Read Parquet Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-0-export-marklogic-database-content-to-the-file-system.html">Export MarkLogic Database Content to the File System</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-1-read-marklogic-xml-write-to-csv.html">Read MarkLogic XML, Write to CSV</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-2-kafka-integration.html">Kafka Integration</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-0-error-handling-in-nifi-flows.html">Error Handling in NiFi Flows</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-1-error-handling-in-putmarklogic.html">Error Handling in PutMarkLogic</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../error-resolutions.html">Error Resolutions</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../performance-considerations.html">Performance Considerations</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../faqs.html">FAQs</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <h1>2-7 Get Data from a Relational Database</h1>
+          <p>
+            The NiFi support for relational databases has some issues with flexibility and scaleability. There is no single processor that can execute an arbitrary SQL SELECT statement and page through the results efficiently.
+          </p>
+          <p>
+            There are the available processors and their issues:
+            <ul>
+              <li><b>ExecuteSQL</b> Executes any query against a database. Does not support paging. Gets the entire resultset as a single Avro result that needs to be split.</li>
+              <li><b>GenerateTableFetch</b> Designed for paging. Executes a SELECT COUNT(*), then generates SQL queries to page over the rows of a table in chunks, but does not execute them. Limitations: 1) only supports one table, 2) does not always get the paging syntax right for every database.</li>
+              <li><b>QueryDatabaseTable</b> As of NiFi 1.7.0, supports arbitrary queries through the "Custom Query" property. Polls for additional rows by storing and querying with an increasing column. (timestamp, incrementing ID, etc.).</li>
+              <li><b>ExecuteSQLToColumnMaps</b></li> MarkLogic Community alternative to the built-in SQL processors
+            </ul>
+          </p>
+          <p>
+            All of the examples below were tested with MySQL 8 with the sample employee database located here:
+            <a href="https://github.com/datacharmer/test_db">https://github.com/datacharmer/test_db</a>
+            There are about 300,000 employees in the database, so I will assume that that is too big for ExecuteSQL without paging.
+            This is the SQL query from which my documents will be generated:
+            <p>
+              <code>
+              SELECT
+              employees.emp_no, employees.birth_date, employees.first_name, employees.last_name,
+              employees.gender, employees.hire_date, employees.dept_emp.dept_no, employees.departments.dept_name,
+              employees.salaries.salary, employees.titles.title
+              FROM
+              employees.employees, employees.dept_emp, employees.departments, employees.salaries, employees.titles
+              WHERE
+              employees.employees.emp_no = employees.dept_emp.emp_no AND
+              employees.dept_emp.to_date > CURDATE() AND
+              employees.dept_emp.dept_no = employees.departments.dept_no AND
+              employees.employees.emp_no = employees.salaries.emp_no AND
+              employees.salaries.to_date > CURDATE() AND
+              employees.employees.emp_no = employees.titles.emp_no AND
+              employees.titles.to_date > CURDATE()
+              </code>
+            </p>
+            Subpages:
+            <ul>
+              <li><a href="2-7-1-create-view-use-generatetablefetch.html">Create View, use GenerateTableFetch</a></li>
+              <li><a href="2-7-2-count-rows-construct-paged-sql-selects.html">Count Rows, Construct Paged SQL SELECTs</a></li>
+              <li><a href="2-7-3-execute-a-sql-query-for-a-nested-array.html">Execute a SQL Query for a Nested Array</a></li>
+              <li><a href="2-7-4-use-executesqltocolumnmaps.html">Use ExecuteSQLToColumnMaps</a></li>
+              <li><a href="2-7-5-column-maps-with-child-query.html">Column Maps with Child Query</a></li>
+            </ul></p>
+          </div>
+        </div>
+      </div>
+    </article>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>
+              Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="../assets//bundle.js" id="1"></script>
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-79716597-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+  </body>
+</html>

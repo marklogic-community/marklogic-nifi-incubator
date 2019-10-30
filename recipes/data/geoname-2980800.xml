@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<geoname xmlns:gml="http://www.opengis.net/gml" xmlns="http://geonames.org">
+  <id>2980800</id>
+  <names>
+    <name tag="main">Saint-Dramont</name>
+    <name tag="ascii">Saint-Dramont</name>
+  </names>
+  <gml:Point srsDimension="2">
+    <gml:pos>45 1.23333</gml:pos>
+  </gml:Point>
+  <feature-code xmlns="http://geonames.org/featureCodes">
+    <feature-class>P</feature-class>
+    <feature-code>PPL</feature-code>
+    <name>populated place</name>
+    <description>a city, town, village, or other agglomeration of buildings where people live and work</description>
+  </feature-code>
+  <country-code>FR</country-code>
+  <cc2/>
+  <admin1-code xmlns="http://geonames.org/admin1Code">
+    <code>FR.97</code>
+    <country-code>FR</country-code>
+    <code-id>97</code-id>
+    <name tag="main">Aquitaine</name>
+    <name tag="ascii">Aquitaine</name>
+    <geonamesid>3037350</geonamesid>
+  </admin1-code>
+  <admin2 xmlns="http://geonames.org/admin2Code">
+    <country-code>FR</country-code>
+    <admin1-code>97</admin1-code>
+    <admin2-code>24</admin2-code>
+    <name tag="main">Département de la Dordogne</name>
+    <name tag="ascii">Departement de la Dordogne</name>
+    <geonamesid>3021042</geonamesid>
+  </admin2>
+  <admin3-code>244</admin3-code>
+  <admin4-code>24412</admin4-code>
+  <population>0</population>
+  <elevation/>
+  <digital-elevation-model>238</digital-elevation-model>
+  <timezone>Europe/Paris</timezone>
+  <modification-date>2012-02-27</modification-date>
+  <query>
+    <cts:word-query xmlns:cts="http://marklogic.com/cts">
+      <cts:text>Saint-Dramont</cts:text>
+      <cts:option>exact</cts:option>
+    </cts:word-query>
+  </query>
+</geoname>
