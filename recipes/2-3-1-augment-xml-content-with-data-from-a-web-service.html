@@ -1,0 +1,412 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+  <!-- Meta -->
+  <meta charset="utf-8">
+  <title>2-3-1 Augment XML content with data from a Web Service</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta content="yes" name="apple-mobile-web-app-capable">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Favicons -->
+  <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="favicon.ico">
+  <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-6638631-15', 'auto');
+  ga('send', 'pageview');
+  </script>
+  <!-- Facebook Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1879746318909687'); // Insert your pixel ID here.
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- DO NOT MODIFY -->
+  <!-- End Facebook Pixel Code -->
+  <link type="text/css" rel="stylesheet" href="../assets//bundle.css">
+</head>
+<body class="">
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/nifi">
+          <span class="logo">
+            <img src="../images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+          </span>
+          MarkLogic NiFi Processors
+        </a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li  >
+            <a href="getting-started.html">Getting Started</a>
+          </li>
+          <li>
+            <a href="https://github.com/marklogic-community/marklogic-nifi-incubator">GitHub</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+            <div class="panel-heading">Navigation</div>
+            <ul class="list-group">
+              <li  class="list-group-item"  >
+                <a href="../index.html">Introduction</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../getting-started.html">Getting Started</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../step-by-step.html">Step-by-Step Guide</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../nifi-features.html">NiFi Features</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../cookbook-recipes.html">Cookbook Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../get-data-from-a-relational-database.html">Relational Database to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../file-system-to-marklogic.html">File System to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow.html">Run Data Hub Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../step-by-step.html#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../bulk-record-insert-into-marklogic.html">Bulk Record Insert Into MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../dhf-with-smart-mastering.html">DHF With Smart Mastering</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item" >
+                <a href="../community-recipes.html">Community Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow-community.html">Run Data Hub-4 Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="1-1-read-from-directory-write-ml.html">Read Files from Directory, Write to MarkLogic﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-2-extract-values-from-json-data﻿.html">Extract values from JSON data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-3-extract-values-from-xml-data﻿.html">Extract values from XML data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-4-convert-data-to-utf-8.html">Convert Data To UTF-8</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-5-handling-multiple-types-of-content.html">Handling Multiple Types of Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-6-ingest-line-delimited-json.html">Ingest Line-Delimited JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-7-split-xml-files-into-multiple-documents.html">Split XML Files Into Multiple Documents</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-8-loading-documents-from-compressed-files.html">Loading Documents From Compressed Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-9-generate-documents-from-csv-files.html">Generate Documents from CSV Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-2-load-pdf-as-binary-and-extracted-metadata-as-json.html">Load PDF as Binary and Extracted Metadata as JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-3-call-a-web-service.html">Call a Web Service</a>
+                  </li>
+                  <li class="list-group-item active">
+                    <a href="2-3-1-augment-xml-content-with-data-from-a-web-service.html">Augment XML content with data from a Web Service</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-4-modify-nifi-attributes-with-custom-scripting.html">Modify NiFi Attributes with Custom Scripting</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-5-get-files-by-ftp.html">Get Files by FTP</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-6-extract-text-from-pdfs-and-office-documents﻿.html">Extract Text from PDFs and Office Documents﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-get-data-from-a-relational-database.html">Get Data from a Relational Database</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-1-create-view-use-generatetablefetch.html">Create View, use GenerateTableFetch</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-2-count-rows-construct-paged-sql-selects.html">Count Rows, Construct Paged SQL SELECTs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-3-execute-a-sql-query-for-a-nested-array.html">Execute a SQL Query for a Nested Array</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-4-use-executesqltocolumnmaps.html">Use ExecuteSQLToColumnMaps</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-5-column-maps-with-child-query.html">Column Maps with Child Query</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-8-loading-content-and-metadata-from-an-mlcp-archive-file.html">Loading Content and Metadata from an mlcp Archive File</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-9-load-triples.html">Load Triples</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-1-transform-json.html">Transform JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-2-load-data-from-sharepoint.html">Load Data from SharePoint</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-3-invoke-html-tidy-on-html-content.html">Invoke HTML Tidy on HTML Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-4-decrypt-input-csvs.html">Decrypt Input CSVs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-5-read-parquet-files.html">Read Parquet Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-0-export-marklogic-database-content-to-the-file-system.html">Export MarkLogic Database Content to the File System</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-1-read-marklogic-xml-write-to-csv.html">Read MarkLogic XML, Write to CSV</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-2-kafka-integration.html">Kafka Integration</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-0-error-handling-in-nifi-flows.html">Error Handling in NiFi Flows</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-1-error-handling-in-putmarklogic.html">Error Handling in PutMarkLogic</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../error-resolutions.html">Error Resolutions</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../performance-considerations.html">Performance Considerations</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../faqs.html">FAQs</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <h1>2-3-1 Augment XML content with data from a Web Service</h1>
+          <p><strong>Thanks to Philip Fennell for contributing this recipe</strong></p>
+          <p>In the following example we will take a location name (place name) from an XHTML fragment and send a request to&nbsp;<a class="external-link" href="http://www.geonames.org/" rel="nofollow">GeoNames</a>&nbsp;to look-up the location name and return it's Latitude and Longitude to be included in the result document along with the original info in the HTML fragment.</p>
+          <p>To help set the context, but make this example more concise, it has been taken out of a larger NiFi Flow that takes a tabular list of sporting events from an HTML web page, extracts the parent table and then the table's rows before attempting to look-up each event's location in Geonames. The final XML document to be created takes other information about the event from each table row and merges the location (lat/long) data to produce a set of individual event documents for ingestion into MarkLogic. At first glance this would seem quite a simple task but unless you understand how to handle augmenting your source data with information from external services in NiFi it turns out to be less obvious than you might have thought.</p>
+          <p>The key takeaway in this example is knowing that you can direct the result of some processor steps into a Flow File attribute instead of it simply replacing the Flow File's content.</p>
+          <p>To simplify the example further, a single XHTML table row fragment, see attached and below, is retrieved from the file system.</p>
+                              <pre>
+                                    <code class="codeblock">
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;tr title="Organizer:Tom Judges:Tom, Dick ,Harry, Medic:Dr. Mop" xmlns="http://www.w3.org/1999/xhtml"&gt;
+  &lt;td&gt;2018-03-24&lt;/td&gt;
+  &lt;td&gt;
+    &lt;a href="showevent.php?idCompetitions=2019"&gt;Bristol Blue 2018&lt;/a&gt;
+  &lt;/td&gt;
+  &lt;td&gt;Bristol, United Kingdom&lt;/td&gt;
+  &lt;td&gt;Pool Competition&lt;/td&gt;
+  &lt;td&gt;&amp;nbspDYN&lt;/td&gt;
+  &lt;td&gt;&amp;nbspDNF&lt;/td&gt;
+  &lt;td&gt;&amp;nbspSTA&lt;/td&gt;
+  &lt;td/&gt;
+  &lt;td/&gt;
+  &lt;td/&gt;
+&lt;/tr&gt;
+                                    </code>
+          </pre>
+          <div>
+            <ul>
+              <li><a href="templates/WebService_Integration.xml" download>Download Template</a></li>
+              <li>Processors:
+                <ul>
+                  <li>GetFile&nbsp;&ndash; starts a flow on a timer
+                    <ul>
+                      <li>Scheduling
+                        <ul>
+                          <li>Run Schedule: 1 day - (will activate, and run only once, each time the processor is started).</li>
+                        </ul>
+                      </li>
+                      <li>Properties
+                        <ul>
+                          <li>Input Directory: path to the attached&nbsp;<a href="../files/example_event.xhtml">example_event.xhtml</a>&nbsp;XHTML row fragment.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>EvaluateXPath&nbsp;("Extract Location Name from XHTML")
+                    <ul>
+                      <li>Properties
+                        <ul>
+                          <li>Destination:flowfile-attribute</li>
+                        </ul>
+                      </li>
+                      <li>Custom attributes:
+                        <ul>
+                          <li>EventID:&nbsp;substring-after(/*:tr/*:td[2]/*:a/@href, 'idCompetitions=')</li>
+                          <li>URLEncodedLocation:&nbsp;encode-for-uri(replace(/*:tr/*:td[3], '\n', ' '))</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>InvokeHTTP&nbsp;("Search GeoNames for Location")
+                    <ul>
+                      <li>Properties
+                        <ul>
+                          <li>HTTP Method: GET</li>
+                          <li>Remote URL:&nbsp;http://api.geonames.org/search?username=geonames-username&amp;style=short&amp;type=json&amp;maxRows=1&amp;q=${URLEncodedLocation}</li>
+                          <li>* Put Response Body in Attribute: GeoNamesResponse</li>
+                          <li>Please note:&nbsp;that you will need to sign-up for a GeoNames account/username in order to use this service effectively.</li>
+                          <li>* =&gt; this is the key property in this processing step, it sends the Web Service's response into the named customer attribute so you have access to both it and the source XHTML table row fragment that you will need later. If not set, this step will only return the Web Service response and you'll no longer have the original event information available down-stream.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>UpdateAttribute&nbsp;("Add Lat/Long as Attributes")
+                    <ul>
+                      <li>Properties
+                        <ul>
+                          <li>filename:&nbsp;${EventID}.xml</li>
+                        </ul>
+                      </li>
+                      <li>Custom properties:
+                        <ul>
+                          <li>Latitude:&nbsp;${GeoNamesResponse:jsonPath('$.geonames[0].lat')}</li>
+                          <li>Longitude:&nbsp;${GeoNamesResponse:jsonPath('$.geonames[0].lng')}</li>
+                          <li>Here we use the NiFi expression language to firstly update the&nbsp;filename&nbsp;property that originates from the&nbsp;GetFile&nbsp;processor, this will give a unique name for the resulting document.</li>
+                          <li>Secondly we get the Lat/Long info from the&nbsp;GeoNamesResponse&nbsp;Flow File Attribute by evaluating a JSONPath expression against the Web Service's response document and storing the result in the&nbsp;Latitude&nbsp;and&nbsp;Longitude&nbsp;attributes.&nbsp;</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>TransformXML&nbsp;("Create XML Document With All Data")
+                    <ul>
+                      <li>Properties
+                        <ul>
+                          <li>XSLT file name: path to the attached XSLT&nbsp;<a href="../files/event-data.xsl">transform</a>.</li>
+                        </ul>
+                      </li>
+                      <li>Custom Properties:
+                        <ul>
+                          <li>LATITUDE:&nbsp;${Latitude}</li>
+                          <li>LONGITUDE:&nbsp;${Longitude}</li>
+                          <li>These custom properties are important to the transform as the allow you to bind the Flow File attributes to XSLT transform external parameters so that the lat/long values can be accessed from within the transform.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                  <li>PutFile&nbsp;- writes the resulting Flow Files's content to the file system.
+                    <ul>
+                      <li>Properties
+                        <ul>
+                          <li>Directory: path to the destination directory for the output result.</li>
+                        </ul>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <img src="../images/231-001 Screen Shot 2018-08-13 at 14.42.15.png"/>
+          </div>
+          <div>
+            <pre>
+              <code>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;event id="2019" date="2018-03-24" type="Pool Competition"&gt;
+   &lt;source href="http://www.apnearanking.se/showevent.php?idCompetitions=2019"/&gt;
+   &lt;name&gt;Bristol Blue 2018 - incorporating the UK BFA National Pool Championships&lt;/name&gt;
+   &lt;location lat="51.45523" lng="-2.59665" geonameId="2654675"&gt;
+      &lt;name&gt;Bristol, United Kingdom&lt;/name&gt;
+   &lt;/location&gt;
+   &lt;organiser&gt;Tom&lt;/organiser&gt;
+   &lt;judges&gt;
+      &lt;judge&gt;Tom&lt;/judge&gt;
+      &lt;judge&gt;Dick&lt;/judge&gt;
+      &lt;judge&gt;Harry&lt;/judge&gt;
+   &lt;/judges&gt;
+   &lt;medic&gt;Dr. Mop&lt;/medic&gt;
+   &lt;disciplines dyn="true" dnf="true" sta="true"/&gt;
+&lt;/event&gt;
+              </code>
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </article>
+  <footer class="site-footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12">
+          <p>
+            Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <!--[if lt IE 9]>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+  <script src="/nifi/js/respond.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="../assets//bundle.js" id="1"></script>
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-79716597-1', 'auto');
+  ga('send', 'pageview');
+  </script>
+</body>
+</html>

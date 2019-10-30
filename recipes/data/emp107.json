@@ -1,0 +1,87 @@
+{
+"envelope": {
+"headers": {
+"lineage": {
+"dataSource": "/employee/107.json",
+"harmonization": {
+"date": "2018-11-08T21:28:09.018182-05:00",
+"user": "admin",
+"description": "HR 360 project - legacy data harmonization",
+"entity": "Employee",
+"flowName": "harmonizeEmployee"
+}
+}
+},
+"triples": [
+{
+"triple": {
+"subject": "http://www.marklogic.com/employees#employeeID107",
+"predicate": "http://www.marklogic.com/employees#reportsTo",
+"object": "http://www.marklogic.com/employees#employeeID4"
+}
+},
+{
+"triple": {
+"subject": "http://www.marklogic.com/employees#employeeID107",
+"predicate": "http://www.marklogic.com/employees#inOffice",
+"object": "http://www.marklogic.com/employees#officeNumber254"
+}
+},
+{
+"triple": {
+"subject": "http://www.marklogic.com/employees#employeeID107",
+"predicate": "http://xmlns.com/foaf/0.1/name",
+"object": {
+"datatype": "http://www.w3.org/2001/XMLSchema#string",
+"value": "Lisa Burns"
+}
+}
+}
+],
+"instance": {
+"Employee": {
+"base_salary": 54165,
+"bonus": 4627,
+"status": "Active - Regular Exempt (Full-time)",
+"job_effective_date": "08/24/2015",
+"dept_name": "Engineering",
+"reportsTo": "4",
+"officeNumber": "254",
+"empID": "107",
+"fullName": "Lisa Burns",
+"employeeImage": "/image/lisa-burns-107.png",
+"startDate": "2015-08-24-05:00",
+"bankAcct": 2386846577,
+"bankId": 189028621
+},
+"info": {
+"title": "Employee",
+"version": "0.0.1"
+}
+},
+"attachments": {
+"emp_id": "107",
+"first_name": "Lisa",
+"last_name": "Burns",
+"dob": "4/26/1990",
+"addr1": "0 Lillian Alley",
+"addr2": "",
+"city": "Wichita",
+"latitude": "37.5422",
+"longitude": "-97.2871",
+"state": "KS",
+"zip": "67236",
+"home_phone": "1-(316)221-0859",
+"mobile": "1-(260)543-5915",
+"pager": "1-(408)680-8614",
+"home_email": "",
+"job_title": "Product Engineer",
+"hire_date": "3/19/2006",
+"work_phone": "1-(859)773-4600",
+"work_email": "Lisa.Burns@foo.com",
+"reports_to": "4",
+"dept_num": "3",
+"office_number": "254"
+}
+}
+}

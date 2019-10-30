@@ -1,0 +1,905 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<template encoding-version="1.2">
+    <description></description>
+    <groupId>c8dc1154-1039-1165-c64f-730200a74508</groupId>
+    <name>PutMarkLogic_Error_Handling</name>
+    <snippet>
+        <connections>
+            <id>525dcda6-24bf-3ecb-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+            <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+            <destination>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>093baa2f-61b6-3a93-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </destination>
+            <flowFileExpiration>0 sec</flowFileExpiration>
+            <labelIndex>1</labelIndex>
+            <name></name>
+            <selectedRelationships>failure</selectedRelationships>
+            <source>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>cbb383fd-287d-3871-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </source>
+            <zIndex>0</zIndex>
+        </connections>
+        <connections>
+            <id>5cadc189-ab8d-34db-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+            <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+            <destination>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>e3fc222c-faa5-3d60-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </destination>
+            <flowFileExpiration>0 sec</flowFileExpiration>
+            <labelIndex>1</labelIndex>
+            <name></name>
+            <selectedRelationships>success</selectedRelationships>
+            <source>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>4a855e22-b71d-3083-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </source>
+            <zIndex>0</zIndex>
+        </connections>
+        <connections>
+            <id>78638f96-3c6d-3ebd-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+            <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+            <destination>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>093baa2f-61b6-3a93-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </destination>
+            <flowFileExpiration>0 sec</flowFileExpiration>
+            <labelIndex>1</labelIndex>
+            <name></name>
+            <selectedRelationships>failure</selectedRelationships>
+            <source>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>210f7ab9-6c47-3f96-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </source>
+            <zIndex>0</zIndex>
+        </connections>
+        <connections>
+            <id>db541c40-e649-3887-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+            <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+            <destination>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>cbb383fd-287d-3871-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </destination>
+            <flowFileExpiration>0 sec</flowFileExpiration>
+            <labelIndex>1</labelIndex>
+            <name></name>
+            <selectedRelationships>success</selectedRelationships>
+            <source>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>e3fc222c-faa5-3d60-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </source>
+            <zIndex>0</zIndex>
+        </connections>
+        <connections>
+            <id>ec862a31-867d-3bca-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <backPressureDataSizeThreshold>1 GB</backPressureDataSizeThreshold>
+            <backPressureObjectThreshold>10000</backPressureObjectThreshold>
+            <destination>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>210f7ab9-6c47-3f96-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </destination>
+            <flowFileExpiration>0 sec</flowFileExpiration>
+            <labelIndex>1</labelIndex>
+            <name></name>
+            <selectedRelationships>failure</selectedRelationships>
+            <source>
+                <groupId>ebd1a2af-f579-32e7-0000-000000000000</groupId>
+                <id>cbb383fd-287d-3871-0000-000000000000</id>
+                <type>PROCESSOR</type>
+            </source>
+            <zIndex>0</zIndex>
+        </connections>
+        <controllerServices>
+            <id>1d6046c6-9a83-3621-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <bundle>
+                <artifact>nifi-marklogic-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.8.0-SNAPSHOT</version>
+            </bundle>
+            <comments></comments>
+            <descriptors>
+                <entry>
+                    <key>Host</key>
+                    <value>
+                        <name>Host</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Port</key>
+                    <value>
+                        <name>Port</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Security Context Type</key>
+                    <value>
+                        <name>Security Context Type</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Username</key>
+                    <value>
+                        <name>Username</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Password</key>
+                    <value>
+                        <name>Password</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Database</key>
+                    <value>
+                        <name>Database</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>SSL Context Service</key>
+                    <value>
+                        <identifiesControllerService>org.apache.nifi.ssl.SSLContextService</identifiesControllerService>
+                        <name>SSL Context Service</name>
+                    </value>
+                </entry>
+                <entry>
+                    <key>Client Authentication</key>
+                    <value>
+                        <name>Client Authentication</name>
+                    </value>
+                </entry>
+            </descriptors>
+            <name>MarkLogicClientService -- Localhost/Documents</name>
+            <persistsState>false</persistsState>
+            <properties>
+                <entry>
+                    <key>Host</key>
+                    <value>localhost</value>
+                </entry>
+                <entry>
+                    <key>Port</key>
+                    <value>8000</value>
+                </entry>
+                <entry>
+                    <key>Security Context Type</key>
+                    <value>DIGEST</value>
+                </entry>
+                <entry>
+                    <key>Username</key>
+                    <value>admin</value>
+                </entry>
+                <entry>
+                    <key>Password</key>
+                </entry>
+                <entry>
+                    <key>Database</key>
+                    <value>Documents</value>
+                </entry>
+                <entry>
+                    <key>SSL Context Service</key>
+                </entry>
+                <entry>
+                    <key>Client Authentication</key>
+                </entry>
+            </properties>
+            <state>ENABLED</state>
+            <type>org.apache.nifi.marklogic.controller.DefaultMarkLogicDatabaseClientService</type>
+        </controllerServices>
+        <processors>
+            <id>093baa2f-61b6-3a93-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <position>
+                <x>574.0</x>
+                <y>574.0</y>
+            </position>
+            <bundle>
+                <artifact>nifi-standard-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.7.1</version>
+            </bundle>
+            <config>
+                <bulletinLevel>WARN</bulletinLevel>
+                <comments></comments>
+                <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                <descriptors>
+                    <entry>
+                        <key>Log Level</key>
+                        <value>
+                            <name>Log Level</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Log Payload</key>
+                        <value>
+                            <name>Log Payload</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Attributes to Log</key>
+                        <value>
+                            <name>Attributes to Log</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>attributes-to-log-regex</key>
+                        <value>
+                            <name>attributes-to-log-regex</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Attributes to Ignore</key>
+                        <value>
+                            <name>Attributes to Ignore</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>attributes-to-ignore-regex</key>
+                        <value>
+                            <name>attributes-to-ignore-regex</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Log prefix</key>
+                        <value>
+                            <name>Log prefix</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>character-set</key>
+                        <value>
+                            <name>character-set</name>
+                        </value>
+                    </entry>
+                </descriptors>
+                <executionNode>ALL</executionNode>
+                <lossTolerant>false</lossTolerant>
+                <penaltyDuration>30 sec</penaltyDuration>
+                <properties>
+                    <entry>
+                        <key>Log Level</key>
+                        <value>info</value>
+                    </entry>
+                    <entry>
+                        <key>Log Payload</key>
+                        <value>false</value>
+                    </entry>
+                    <entry>
+                        <key>Attributes to Log</key>
+                    </entry>
+                    <entry>
+                        <key>attributes-to-log-regex</key>
+                        <value>.*</value>
+                    </entry>
+                    <entry>
+                        <key>Attributes to Ignore</key>
+                    </entry>
+                    <entry>
+                        <key>attributes-to-ignore-regex</key>
+                    </entry>
+                    <entry>
+                        <key>Log prefix</key>
+                    </entry>
+                    <entry>
+                        <key>character-set</key>
+                        <value>windows-1252</value>
+                    </entry>
+                </properties>
+                <runDurationMillis>0</runDurationMillis>
+                <schedulingPeriod>0 sec</schedulingPeriod>
+                <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                <yieldDuration>1 sec</yieldDuration>
+            </config>
+            <executionNodeRestricted>false</executionNodeRestricted>
+            <name>LogAttribute</name>
+            <relationships>
+                <autoTerminate>true</autoTerminate>
+                <name>success</name>
+            </relationships>
+            <state>STOPPED</state>
+            <style/>
+            <type>org.apache.nifi.processors.standard.LogAttribute</type>
+        </processors>
+        <processors>
+            <id>210f7ab9-6c47-3f96-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <position>
+                <x>0.0</x>
+                <y>704.3570985437907</y>
+            </position>
+            <bundle>
+                <artifact>nifi-marklogic-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.8.0-SNAPSHOT</version>
+            </bundle>
+            <config>
+                <bulletinLevel>WARN</bulletinLevel>
+                <comments></comments>
+                <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                <descriptors>
+                    <entry>
+                        <key>DatabaseClient Service</key>
+                        <value>
+                            <identifiesControllerService>org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService</identifiesControllerService>
+                            <name>DatabaseClient Service</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Batch size</key>
+                        <value>
+                            <name>Batch size</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Thread count</key>
+                        <value>
+                            <name>Thread count</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Collections</key>
+                        <value>
+                            <name>Collections</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Format</key>
+                        <value>
+                            <name>Format</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Job ID</key>
+                        <value>
+                            <name>Job ID</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Job Name</key>
+                        <value>
+                            <name>Job Name</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>MIME type</key>
+                        <value>
+                            <name>MIME type</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Permissions</key>
+                        <value>
+                            <name>Permissions</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Server transform</key>
+                        <value>
+                            <name>Server transform</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Temporal collection</key>
+                        <value>
+                            <name>Temporal collection</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI attribute name</key>
+                        <value>
+                            <name>URI attribute name</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI prefix</key>
+                        <value>
+                            <name>URI prefix</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI suffix</key>
+                        <value>
+                            <name>URI suffix</name>
+                        </value>
+                    </entry>
+                </descriptors>
+                <executionNode>ALL</executionNode>
+                <lossTolerant>false</lossTolerant>
+                <penaltyDuration>30 sec</penaltyDuration>
+                <properties>
+                    <entry>
+                        <key>DatabaseClient Service</key>
+                        <value>1d6046c6-9a83-3621-0000-000000000000</value>
+                    </entry>
+                    <entry>
+                        <key>Batch size</key>
+                        <value>1</value>
+                    </entry>
+                    <entry>
+                        <key>Thread count</key>
+                        <value>3</value>
+                    </entry>
+                    <entry>
+                        <key>Collections</key>
+                        <value>BatchErrorTestRetry</value>
+                    </entry>
+                    <entry>
+                        <key>Format</key>
+                    </entry>
+                    <entry>
+                        <key>Job ID</key>
+                    </entry>
+                    <entry>
+                        <key>Job Name</key>
+                    </entry>
+                    <entry>
+                        <key>MIME type</key>
+                    </entry>
+                    <entry>
+                        <key>Permissions</key>
+                        <value>rest-reader,read,rest-writer,update</value>
+                    </entry>
+                    <entry>
+                        <key>Server transform</key>
+                    </entry>
+                    <entry>
+                        <key>Temporal collection</key>
+                    </entry>
+                    <entry>
+                        <key>URI attribute name</key>
+                        <value>marklogic.uri</value>
+                    </entry>
+                    <entry>
+                        <key>URI prefix</key>
+                    </entry>
+                    <entry>
+                        <key>URI suffix</key>
+                    </entry>
+                </properties>
+                <runDurationMillis>0</runDurationMillis>
+                <schedulingPeriod>0 sec</schedulingPeriod>
+                <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                <yieldDuration>1 sec</yieldDuration>
+            </config>
+            <executionNodeRestricted>false</executionNodeRestricted>
+            <name>PutMarkLogic</name>
+            <relationships>
+                <autoTerminate>false</autoTerminate>
+                <name>failure</name>
+            </relationships>
+            <relationships>
+                <autoTerminate>true</autoTerminate>
+                <name>success</name>
+            </relationships>
+            <state>RUNNING</state>
+            <style/>
+            <type>org.apache.nifi.marklogic.processor.PutMarkLogic</type>
+        </processors>
+        <processors>
+            <id>4a855e22-b71d-3083-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <position>
+                <x>2.0634765625</x>
+                <y>0.0</y>
+            </position>
+            <bundle>
+                <artifact>nifi-standard-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.7.1</version>
+            </bundle>
+            <config>
+                <bulletinLevel>WARN</bulletinLevel>
+                <comments></comments>
+                <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                <descriptors>
+                    <entry>
+                        <key>Input Directory</key>
+                        <value>
+                            <name>Input Directory</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>File Filter</key>
+                        <value>
+                            <name>File Filter</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Path Filter</key>
+                        <value>
+                            <name>Path Filter</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Batch Size</key>
+                        <value>
+                            <name>Batch Size</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Keep Source File</key>
+                        <value>
+                            <name>Keep Source File</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Recurse Subdirectories</key>
+                        <value>
+                            <name>Recurse Subdirectories</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Polling Interval</key>
+                        <value>
+                            <name>Polling Interval</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Ignore Hidden Files</key>
+                        <value>
+                            <name>Ignore Hidden Files</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Minimum File Age</key>
+                        <value>
+                            <name>Minimum File Age</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Maximum File Age</key>
+                        <value>
+                            <name>Maximum File Age</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Minimum File Size</key>
+                        <value>
+                            <name>Minimum File Size</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Maximum File Size</key>
+                        <value>
+                            <name>Maximum File Size</name>
+                        </value>
+                    </entry>
+                </descriptors>
+                <executionNode>ALL</executionNode>
+                <lossTolerant>false</lossTolerant>
+                <penaltyDuration>30 sec</penaltyDuration>
+                <properties>
+                    <entry>
+                        <key>Input Directory</key>
+                        <value>f:\mirror\employees</value>
+                    </entry>
+                    <entry>
+                        <key>File Filter</key>
+                        <value>[^\.].*</value>
+                    </entry>
+                    <entry>
+                        <key>Path Filter</key>
+                    </entry>
+                    <entry>
+                        <key>Batch Size</key>
+                        <value>10</value>
+                    </entry>
+                    <entry>
+                        <key>Keep Source File</key>
+                        <value>false</value>
+                    </entry>
+                    <entry>
+                        <key>Recurse Subdirectories</key>
+                        <value>true</value>
+                    </entry>
+                    <entry>
+                        <key>Polling Interval</key>
+                        <value>0 sec</value>
+                    </entry>
+                    <entry>
+                        <key>Ignore Hidden Files</key>
+                        <value>true</value>
+                    </entry>
+                    <entry>
+                        <key>Minimum File Age</key>
+                        <value>0 sec</value>
+                    </entry>
+                    <entry>
+                        <key>Maximum File Age</key>
+                    </entry>
+                    <entry>
+                        <key>Minimum File Size</key>
+                        <value>0 B</value>
+                    </entry>
+                    <entry>
+                        <key>Maximum File Size</key>
+                    </entry>
+                </properties>
+                <runDurationMillis>0</runDurationMillis>
+                <schedulingPeriod>0 sec</schedulingPeriod>
+                <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                <yieldDuration>1 sec</yieldDuration>
+            </config>
+            <executionNodeRestricted>false</executionNodeRestricted>
+            <name>GetFile</name>
+            <relationships>
+                <autoTerminate>false</autoTerminate>
+                <name>success</name>
+            </relationships>
+            <state>RUNNING</state>
+            <style/>
+            <type>org.apache.nifi.processors.standard.GetFile</type>
+        </processors>
+        <processors>
+            <id>cbb383fd-287d-3871-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <position>
+                <x>0.0</x>
+                <y>445.3570985437907</y>
+            </position>
+            <bundle>
+                <artifact>nifi-marklogic-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.8.0-SNAPSHOT</version>
+            </bundle>
+            <config>
+                <bulletinLevel>WARN</bulletinLevel>
+                <comments></comments>
+                <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                <descriptors>
+                    <entry>
+                        <key>DatabaseClient Service</key>
+                        <value>
+                            <identifiesControllerService>org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService</identifiesControllerService>
+                            <name>DatabaseClient Service</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Batch size</key>
+                        <value>
+                            <name>Batch size</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Thread count</key>
+                        <value>
+                            <name>Thread count</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Collections</key>
+                        <value>
+                            <name>Collections</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Format</key>
+                        <value>
+                            <name>Format</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Job ID</key>
+                        <value>
+                            <name>Job ID</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Job Name</key>
+                        <value>
+                            <name>Job Name</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>MIME type</key>
+                        <value>
+                            <name>MIME type</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Permissions</key>
+                        <value>
+                            <name>Permissions</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Server transform</key>
+                        <value>
+                            <name>Server transform</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Temporal collection</key>
+                        <value>
+                            <name>Temporal collection</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI attribute name</key>
+                        <value>
+                            <name>URI attribute name</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI prefix</key>
+                        <value>
+                            <name>URI prefix</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>URI suffix</key>
+                        <value>
+                            <name>URI suffix</name>
+                        </value>
+                    </entry>
+                </descriptors>
+                <executionNode>ALL</executionNode>
+                <lossTolerant>false</lossTolerant>
+                <penaltyDuration>30 sec</penaltyDuration>
+                <properties>
+                    <entry>
+                        <key>DatabaseClient Service</key>
+                        <value>1d6046c6-9a83-3621-0000-000000000000</value>
+                    </entry>
+                    <entry>
+                        <key>Batch size</key>
+                        <value>100</value>
+                    </entry>
+                    <entry>
+                        <key>Thread count</key>
+                        <value>3</value>
+                    </entry>
+                    <entry>
+                        <key>Collections</key>
+                        <value>BatchErrorTest</value>
+                    </entry>
+                    <entry>
+                        <key>Format</key>
+                    </entry>
+                    <entry>
+                        <key>Job ID</key>
+                    </entry>
+                    <entry>
+                        <key>Job Name</key>
+                    </entry>
+                    <entry>
+                        <key>MIME type</key>
+                    </entry>
+                    <entry>
+                        <key>Permissions</key>
+                        <value>rest-reader,read,rest-writer,update</value>
+                    </entry>
+                    <entry>
+                        <key>Server transform</key>
+                    </entry>
+                    <entry>
+                        <key>Temporal collection</key>
+                    </entry>
+                    <entry>
+                        <key>URI attribute name</key>
+                        <value>marklogic.uri</value>
+                    </entry>
+                    <entry>
+                        <key>URI prefix</key>
+                    </entry>
+                    <entry>
+                        <key>URI suffix</key>
+                    </entry>
+                </properties>
+                <runDurationMillis>0</runDurationMillis>
+                <schedulingPeriod>0 sec</schedulingPeriod>
+                <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                <yieldDuration>1 sec</yieldDuration>
+            </config>
+            <executionNodeRestricted>false</executionNodeRestricted>
+            <name>PutMarkLogic</name>
+            <relationships>
+                <autoTerminate>false</autoTerminate>
+                <name>failure</name>
+            </relationships>
+            <relationships>
+                <autoTerminate>true</autoTerminate>
+                <name>success</name>
+            </relationships>
+            <state>RUNNING</state>
+            <style/>
+            <type>org.apache.nifi.marklogic.processor.PutMarkLogic</type>
+        </processors>
+        <processors>
+            <id>e3fc222c-faa5-3d60-0000-000000000000</id>
+            <parentGroupId>ebd1a2af-f579-32e7-0000-000000000000</parentGroupId>
+            <position>
+                <x>0.0</x>
+                <y>232.35703750863445</y>
+            </position>
+            <bundle>
+                <artifact>nifi-update-attribute-nar</artifact>
+                <group>org.apache.nifi</group>
+                <version>1.7.1</version>
+            </bundle>
+            <config>
+                <bulletinLevel>WARN</bulletinLevel>
+                <comments></comments>
+                <concurrentlySchedulableTaskCount>1</concurrentlySchedulableTaskCount>
+                <descriptors>
+                    <entry>
+                        <key>Delete Attributes Expression</key>
+                        <value>
+                            <name>Delete Attributes Expression</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Store State</key>
+                        <value>
+                            <name>Store State</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>Stateful Variables Initial Value</key>
+                        <value>
+                            <name>Stateful Variables Initial Value</name>
+                        </value>
+                    </entry>
+                    <entry>
+                        <key>marklogic.uri</key>
+                        <value>
+                            <name>marklogic.uri</name>
+                        </value>
+                    </entry>
+                </descriptors>
+                <executionNode>ALL</executionNode>
+                <lossTolerant>false</lossTolerant>
+                <penaltyDuration>30 sec</penaltyDuration>
+                <properties>
+                    <entry>
+                        <key>Delete Attributes Expression</key>
+                    </entry>
+                    <entry>
+                        <key>Store State</key>
+                        <value>Do not store state</value>
+                    </entry>
+                    <entry>
+                        <key>Stateful Variables Initial Value</key>
+                    </entry>
+                    <entry>
+                        <key>marklogic.uri</key>
+                        <value>/employees/${filename}</value>
+                    </entry>
+                </properties>
+                <runDurationMillis>0</runDurationMillis>
+                <schedulingPeriod>0 sec</schedulingPeriod>
+                <schedulingStrategy>TIMER_DRIVEN</schedulingStrategy>
+                <yieldDuration>1 sec</yieldDuration>
+            </config>
+            <executionNodeRestricted>false</executionNodeRestricted>
+            <name>UpdateAttribute</name>
+            <relationships>
+                <autoTerminate>false</autoTerminate>
+                <name>success</name>
+            </relationships>
+            <state>RUNNING</state>
+            <style/>
+            <type>org.apache.nifi.processors.attributes.UpdateAttribute</type>
+        </processors>
+    </snippet>
+    <timestamp>09/24/2018 16:34:01 PDT</timestamp>
+</template>

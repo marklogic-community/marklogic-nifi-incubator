@@ -1,0 +1,12 @@
+{
+   "type" : "record",
+   "namespace" : "nifi",
+   "name" : "Geoname",
+   "fields" : [
+      { "name" : "Id" , "type" : "int" },
+      { "name" : "Name" , "type" : "string" },
+      { "name" : "Latitude" , "type" : "double" },
+      { "name" : "Longitude" , "type" : "double" },
+      { "name" : "CountryCode" , "type" : "string" }
+   ]
+}

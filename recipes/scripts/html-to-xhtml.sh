@@ -1,0 +1,1 @@
+tidy --output-xhtml yes --new-blocklevel-tags section,article,main,aside,header,footer,nav,figure,figcaption,template,video,audio,source,track,embed,mark,progress,meter,time,ruby,rt,rp,bdi,wbr,canvas,datalist,keygen,output

@@ -1,0 +1,509 @@
+<!doctype html>
+<!--[if lt IE 7 ]><html itemscope itemtype="http://schema.org/Organization" id="ie6" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 7 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie7" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 8 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie8" class="ie ie-old" lang="en-US"><![endif]-->
+<!--[if IE 9 ]>   <html itemscope itemtype="http://schema.org/Organization" id="ie9" class="ie" lang="en-US"><![endif]-->
+<!--[if gt IE 9]><!--><html itemscope itemtype="http://schema.org/Organization" lang="en-US"><!--<![endif]-->
+<head>
+  <!-- Meta -->
+  <meta charset="utf-8">
+  <title>3-2 Load Data from SharePoint</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta content="yes" name="apple-mobile-web-app-capable">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Favicons -->
+  <link rel="shortcut icon" sizes="16x16 24x24 32x32 48x48 64x64 96x96" href="favicon.ico">
+  <meta name="application-name" content="MarkLogic NiFi Processors - NiFi Processors for interacting with MarkLogic">
+  <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-6638631-15', 'auto');
+  ga('send', 'pageview');
+  </script>
+  <!-- Facebook Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1879746318909687'); // Insert your pixel ID here.
+  fbq('track', 'PageView');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1879746318909687&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- DO NOT MODIFY -->
+  <!-- End Facebook Pixel Code -->
+  <link type="text/css" rel="stylesheet" href="../assets//bundle.css">
+</head>
+<body class="">
+  <nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/nifi">
+          <span class="logo">
+            <img src="../images//logo-marklogic.svg" width="180px" height="38px" alt="MarkLogic" title="MarkLogic" scale="0">
+          </span>
+          MarkLogic NiFi Processors
+        </a>
+      </div>
+      <div id="navbar" class="navbar-collapse collapse">
+        <ul class="nav navbar-nav navbar-right">
+          <li  >
+            <a href="getting-started.html">Getting Started</a>
+          </li>
+          <li>
+            <a href="https://github.com/marklogic-community/marklogic-nifi-incubator">GitHub</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <article>
+    <div class="container">
+      <div class="row">
+        <div class="side-nav col-md-3 hide-small">
+          <div class="panel panel-default">
+            <div class="panel-heading">Navigation</div>
+            <ul class="list-group">
+              <li  class="list-group-item"  >
+                <a href="../index.html">Introduction</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../getting-started.html">Getting Started</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../step-by-step.html">Step-by-Step Guide</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../nifi-features.html">NiFi Features</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../cookbook-recipes.html">Cookbook Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../get-data-from-a-relational-database.html">Relational Database to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../file-system-to-marklogic.html">File System to MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow.html">Run Data Hub Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../step-by-step.html#add-querymarklogic-processor">Extract MarkLogic Documents</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../bulk-record-insert-into-marklogic.html">Bulk Record Insert Into MarkLogic</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../dhf-with-smart-mastering.html">DHF With Smart Mastering</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item" >
+                <a href="../community-recipes.html">Community Recipes</a>
+                <ul class="list-group">
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-input-flow-community.html">Run Data Hub-4 Input Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="../run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a>
+                  </li>
+                  <li  class="list-group-item"  >
+                    <a href="1-1-read-from-directory-write-ml.html">Read Files from Directory, Write to MarkLogic﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-2-extract-values-from-json-data﻿.html">Extract values from JSON data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-3-extract-values-from-xml-data﻿.html">Extract values from XML data﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-4-convert-data-to-utf-8.html">Convert Data To UTF-8</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-5-handling-multiple-types-of-content.html">Handling Multiple Types of Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-6-ingest-line-delimited-json.html">Ingest Line-Delimited JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-7-split-xml-files-into-multiple-documents.html">Split XML Files Into Multiple Documents</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-8-loading-documents-from-compressed-files.html">Loading Documents From Compressed Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="1-9-generate-documents-from-csv-files.html">Generate Documents from CSV Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-2-load-pdf-as-binary-and-extracted-metadata-as-json.html">Load PDF as Binary and Extracted Metadata as JSON</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-3-call-a-web-service.html">Call a Web Service</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-3-1-augment-xml-content-with-data-from-a-web-service.html">Augment XML content with data from a Web Service</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-4-modify-nifi-attributes-with-custom-scripting.html">Modify NiFi Attributes with Custom Scripting</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-5-get-files-by-ftp.html">Get Files by FTP</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-6-extract-text-from-pdfs-and-office-documents﻿.html">Extract Text from PDFs and Office Documents﻿</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-get-data-from-a-relational-database.html">Get Data from a Relational Database</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-1-create-view-use-generatetablefetch.html">Create View, use GenerateTableFetch</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-2-count-rows-construct-paged-sql-selects.html">Count Rows, Construct Paged SQL SELECTs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-3-execute-a-sql-query-for-a-nested-array.html">Execute a SQL Query for a Nested Array</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-4-use-executesqltocolumnmaps.html">Use ExecuteSQLToColumnMaps</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-7-5-column-maps-with-child-query.html">Column Maps with Child Query</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-8-loading-content-and-metadata-from-an-mlcp-archive-file.html">Loading Content and Metadata from an mlcp Archive File</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="2-9-load-triples.html">Load Triples</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-1-transform-json.html">Transform JSON</a>
+                  </li>
+                  <li class="list-group-item active">
+                    <a href="3-2-load-data-from-sharepoint.html">Load Data from SharePoint</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-3-invoke-html-tidy-on-html-content.html">Invoke HTML Tidy on HTML Content</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-4-decrypt-input-csvs.html">Decrypt Input CSVs</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="3-5-read-parquet-files.html">Read Parquet Files</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-0-export-marklogic-database-content-to-the-file-system.html">Export MarkLogic Database Content to the File System</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-1-read-marklogic-xml-write-to-csv.html">Read MarkLogic XML, Write to CSV</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="4-2-kafka-integration.html">Kafka Integration</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-0-error-handling-in-nifi-flows.html">Error Handling in NiFi Flows</a>
+                  </li>
+                  <li class="list-group-item">
+                    <a href="5-1-error-handling-in-putmarklogic.html">Error Handling in PutMarkLogic</a>
+                  </li>
+                </ul>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../error-resolutions.html">Error Resolutions</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../performance-considerations.html">Performance Considerations</a>
+              </li>
+              <li  class="list-group-item"  >
+                <a href="../faqs.html">FAQs</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <h1>3-2 Load Data from SharePoint</h1>
+          <div>
+            <p>
+              Authentication is the most challenging issue in NiFi / SharePoint integration. NiFi currently (1.6.0) does not support NTLM authentication in the InvokeHTTP processor. (see <a href="https://issues.apache.org/jira/browse/NIFI-3096">Jira issue</a>) Azure-hosted SharePoint and the Office 365 version of SharePoint may require a combination of OAuth and two-way SSL.
+            </p>
+            <p>
+              These are beyond the scope of this recipe. The flows here were tested with an on-premises installation of SharePoint Server 2016 with basic authentication enabled, as below:
+            </p>
+          </div>
+          <div>
+            <img src="../images/03-002 iis-enable-basic-auth.png"/>
+          </div>
+          <div>
+            <a href="templates/SharePoint_Documents.xml">Download Template</a>
+          </div>
+          <div>
+            <a href="templates/SharePoint_Documents_debugging.xml">Download Template (with extra LogAttribute processors)</a>
+            <p style="margin-left: 40px">Most of the flow's error conditions are routed to these processors. For debugging, keep the LogAttribute processors in the Stopped state. On error, you can List Queue on any queue which is non-empty and view the error flowfiles.</p>
+          </div>
+          <div>
+            <h5>Processors:</h5>
+            <ul>
+              <li>GenerateFlowFile &ndash; starts the flow. Stop and Start the processor to retry.
+                <ul>
+                  <li>Settings
+                    <ul>
+                      <li>Automatically Terminate Relationships: failure</li>
+                    </ul>
+                  </li>
+                  <li>Scheduling
+                    <ul>
+                      <li>Run Schedule: 1000 days (prevents infinitely looping)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>UpdateAttribute
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>sharepoint.url: http://yourdomainname</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>InvokeHTTP ("Get SharePoint ContextInfo Digest")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>HTTP Method: POST</li>
+                      <li>Remote URL: ${sharepoint.url}/_api/contextinfo</li>
+                      <li>Basic Authentication Username: (sharepoint user)</li>
+                      <li>Basic Authentication Password: (sharepoint password)</li>
+                      <li>Attributes to Send: Accept</li>
+                      <li>Accept: application/json; odata=verbose (custom property)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>EvaluateJsonPath ("Extract Digest")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>Destination: flowfile-attribute</li>
+                      <li>sharepoint.digest: $.d.GetContextWebInformation.FormDigestValue (custom property)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>InvokeHTTP ("Get Document Libraries")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>HTTP Method: GET</li>
+                      <li>Remote URL: ${sharepoint.url}/_api/lists?$select=Title,ServerRelativeUrl&amp;$filter=BaseTemplate eq 101 and hidden eq false&amp;$expand=RootFolder</li>
+                      <li>Basic Authentication Username: (sharepoint user)</li>
+                      <li>Basic Authentication Password: (sharepoint password)</li>
+                      <li>Attributes to Send: Accept,X-RequestDigest</li>
+                      <li>Accept: application/json; odata=verbose (custom property)</li>
+                      <li>X-RequestDigest: ${sharepoint.digest}</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>SplitJson
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>JsonPath Expression: $.d.results</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>EvaluateJsonPath ("Extract Library ServerRelativeUrl")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>Destination: flowfile-attribute</li>
+                      <li>server.relative.url: $.RootFolder.ServerRelativeUrl (custom property)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>InvokeHTTP ("Get Doc Library File List")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>HTTP Method: GET</li>
+                      <li>Remote URL: ${sharepoint.url}/_api/web/GetFolderByServerRelativeUrl('${server.relative.url}')/Files</li>
+                      <li>Basic Authentication Username: (sharepoint user)</li>
+                      <li>Basic Authentication Password: (sharepoint password)</li>
+                      <li>Attributes to Send: Accept,X-RequestDigest</li>
+                      <li>Accept: application/json; odata=verbose (custom property)</li>
+                      <li>X-RequestDigest: ${sharepoint.digest}</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>SplitJson
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>JsonPath Expression: $.d.results</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>EvaluateJsonPath ("Extract FileServerRelativeUrl")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>Destination: flowfile-attribute</li>
+                      <li>server.relative.url: $.ServerRelativeUrl (custom property)</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>UpdateAttribute ("Set MarkLogic URI (Metadata)")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>marklogic.uri: ${server.relative.url:replace(' ', '%20'):urlEncode()}.metadata.json</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>InvokeHTTP ("Get Document")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>HTTP Method: GET</li>
+                      <li>Remote URL: ${sharepoint.url}${server.relative.url}</li>
+                      <li>Basic Authentication Username: (sharepoint user)</li>
+                      <li>Basic Authentication Password: (sharepoint password)</li>
+                      <li>Attributes to Send: Accept,X-RequestDigest</li>
+                      <li>Accept: application/json; odata=verbose (custom property)</li>
+                      <li>X-RequestDigest: ${sharepoint.digest}</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>UpdateAttribute ("Set MarkLogic URI (Document)")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>marklogic.uri: ${server.relative.url:replace(' ', '%20'):urlEncode()}</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li>InvokeHTTP ("PUT to /v1/documents")
+                <ul>
+                  <li>Properties
+                    <ul>
+                      <li>HTTP Method: PUT</li>
+                      <li>Remote URL: http://localhost:8000/LATEST/documents?uri=${marklogic.uri}</li>
+                      <li>Basic Authentication Username: youruser</li>
+                      <li>Basic Authentication Password: yourpassword</li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+            <div>
+              <img src="../images/03-002 SharePoint Documents flow.png"/>
+            </div>
+            <div>
+              <p>
+                The REST API calls to extract document library documents and metadata are as follows.
+              </p>
+              <p>POST</p>
+              <p>http://hostname/_api/contextinfo</p>
+              <p>Headers: "Accept: application/json; odata=verbose"</p>
+              <p>Returns:</p>
+              <br />
+              <code>{
+              "d": {
+              "GetContextWebInformation": {
+              "__metadata": {
+              "type": "SP.ContextWebInformation"
+              },
+              "FormDigestTimeoutSeconds": 1800,
+              "FormDigestValue": "0x2C161C94B635D0D7221D917DA77F2B942F33BAFE3261D839CBDED272B5CA39A56B14FFDEBEABE2B25C1974EDEA15B24E9FEBE881C423BE99CF774B611BE7F0F1,30 May 2018 22:46:04 -0000",
+              "LibraryVersion": "16.0.4690.1000",
+              "SiteFullUrl": "http://win-ds66hph86cm",
+              "SupportedSchemaVersions": {
+              "__metadata": {
+              "type": "Collection(Edm.String)"
+              },
+              "results": [
+              "14.0.0.0",
+              "15.0.0.0"
+              ]
+              },
+              "WebFullUrl": "http://win-ds66hph86cm"
+              }
+              }
+              }</code><br />
+              <p>Extract the value of FormDigestValue to send in the HTTP header X-RequestDigest on each subsequent REST call.</p>
+              <p>Get document libraries:</p>
+              <p><strong>GET</strong></p>
+              <p><strong><span class="nolink">http://hostname/_api/lists?$select=Title,ServerRelativeUrl&amp;$filter=BaseTemplate</span>&nbsp;eq 101 and hidden eq false&amp;$expand=RootFolder</strong></p>
+              <p>Headers</p>
+              <p>Accept: application/json; odata=verbose</p>
+              <p>X-RequestDigest: (value of FormDigestValue from above)</p>
+              <p>&nbsp;</p>
+              <p>Split the JSON on the Results array, then extract the ServerRelativeUrl from each document library object. For each ServerRelativeUrl, get document library file list:</p>
+              <p>&nbsp;</p>
+              <p><strong>GET</strong></p>
+              <p><strong><span class="nolink">http://hostname/</span>_api/web/GetFolderByServerRelativeUrl('${server.relative.url}')/Files</strong></p>
+              <p>Headers</p>
+              <p>Accept: application/json; odata=verbose</p>
+              <p>X-RequestDigest: (value of FormDigestValue from above)</p>
+              <p>&nbsp;</p>
+              <p>Split the JSON on the Results array, then extract the ServerRelativeUrl from each file object. Store the file object, the file metadata, in MarkLogic with a URI of '${server.relative.url}'.metadata.json. For each ServerRelativeUrl, get the file from SharePoint and store in MarkLogic with the ServerRelativeUrl as the URI.</p>
+              <p>&nbsp;</p>
+              <p>To get each document:</p>
+              <p><strong>GET</strong></p>
+              <p><strong>http://hostname${server.relative.url}</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>
+              Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+            </p>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="../assets//bundle.js" id="1"></script>
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-79716597-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+  </body>
+</html>
