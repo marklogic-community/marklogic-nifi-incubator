@@ -238,42 +238,211 @@
         </div>
         <div class="col-md-9">
           <h1 id="community-recipes">MarkLogic Community Recipes</h1>
-          <h2 id="data-hub-input-flow"><a href="./run-data-hub-input-flow-community.html">Data Hub-4 Input Flow</a></h2>
-          <p>Use a <a href="https://github.com/marklogic/marklogic-data-hub">MarkLogic Data Hub</a> Input Flow to transform documents while loading.</p>
-          <p><a href="./run-data-hub-input-flow-community.html">Read More</a></p>
-          <h2 id="data-hub-harmonize-flow"><a href="./run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a></h2>
-          <p>Call the DHF Harmonization flow using EvaluateCollector Processor</p>
-          <p><a href="./run-data-hub-harmonize-flow.html">Read More</a></p>
-          <h2 id="run-data-hub-flows"><a href="./run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a></h2>
-          <p>Orchestration of DHF input and Harmonize flow in single NiFi template </p>
-          <p><a href="./run-data-hub-flows.html">Read More</a></p>
+          <div>
+            <h2 id="data-hub-input-flow"><a href="./run-data-hub-input-flow-community.html">Data Hub-4 Input Flow</a></h2>
+            <p>Use a <a href="https://github.com/marklogic/marklogic-data-hub">MarkLogic Data Hub</a> Input Flow to transform documents while loading.</p>
+            <p><a href="./run-data-hub-input-flow-community.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="data-hub-harmonize-flow"><a href="./run-data-hub-harmonize-flow.html">Run Data Hub-4 Harmonize Flow</a></h2>
+            <p>Call the DHF Harmonization flow using EvaluateCollector Processor</p>
+            <p><a href="./run-data-hub-harmonize-flow.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="run-data-hub-flows"><a href="./run-data-hub-flows.html">Run Data Hub-4 Flows (Input and Harmonize)</a></h2>
+            <p>Orchestration of DHF input and Harmonize flow in single NiFi template </p>
+            <p><a href="./run-data-hub-flows.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="directory-read-write"><a href="recipes/1-1-read-from-directory-write-ml.html">Read Files from Directory, Write to MarkLogic﻿</a></h2>
+            <p>This example watches a directory for files, imports them into MarkLogic, then deletes them. The MarkLogic URI is /files/ followed by the filename.</p>
+            <p><a href="recipes/1-1-read-from-directory-write-ml.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="json-extract"><a href="recipes/1-2-extract-values-from-json-data﻿.html">Extract values from JSON data﻿</a></h2>
+            <p>This example introduces the EvaluateJsonPath processor and demonstrates how to extract an ID value from JSON data to use in constructing the URI.</p>
+            <p><a href="recipes/1-2-extract-values-from-json-data﻿.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="xml-extract"><a href="recipes/1-3-extract-values-from-xml-data﻿.html">Extract values from XML data﻿</a></h2>
+            <p>This example introduces the EvaluateXPath processor to extract an ID value from XML data to use in constructing the URI. The XPath value is stored in a FlowFile property which is used later in InvokeHTTP to construct the document URI.</p>
+            <p><a href="recipes/1-3-extract-values-from-xml-data﻿.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="utf8-converstion"><a href="recipes/1-4-convert-data-to-utf-8.html">Convert Data To UTF-8</a></h2>
+            <p>This example demonstrates the ConvertCharacterSet processor and shows how to convert data from another character set to UTF-8.</p>
+            <p><a href="recipes/1-4-convert-data-to-utf-8.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="mixed-content"><a href="recipes/1-5-handling-multiple-types-of-content.html">Handling Multiple Types of Content</a></h2>
+            <p>This example demonstrates how tow handle multiple content types.</p>
+            <p><a href="recipes/1-5-handling-multiple-types-of-content.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="ingest-multiline-json"><a href="recipes/1-6-ingest-line-delimited-json.html">Ingest Line-Delimited JSON</a></h2>
+            <p>This example demonstrates the SplitText processor and shows how to ingest line-delimited JSON. Like the previous JSON example, we will construct the URI from an ID property in the JSON.</p>
+            <p><a href="recipes/1-6-ingest-line-delimited-json.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="xml-split"><a href="recipes/1-7-split-xml-files-into-multiple-documents.html">Split XML Files Into Multiple Documents</a></h2>
+            <p>This example introduces the SplitXml processor to split an aggregate XML file into multiple documents.</p>
+            <p><a href="recipes/1-7-split-xml-files-into-multiple-documents.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="compressed-ingest"><a href="recipes/1-8-loading-documents-from-compressed-files.html">Loading Documents From Compressed Files</a></h2>
+            <p>This example demonstrates the UnpackContent processor and shows how to load content from one or more compressed files.</p>
+            <p><a href="recipes/1-8-loading-documents-from-compressed-files.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="csv-ingest"><a href="recipes/1-9-generate-documents-from-csv-files.html">Generate Documents from CSV Files</a></h2>
+            <p>This example introduces the EvaluateXPath processor to extract an ID value from XML data to use in constructing the URI.</p>
+            <p><a href="recipes/1-9-generate-documents-from-csv-files.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="pdf-ingest"><a href="recipes/2-2-load-pdf-as-binary-and-extracted-metadata-as-json.html">Load PDF as Binary and Extracted Metadata as JSON</a></h2>
+            <p>This example shows how to use the ExtractMediaMetadata processor to extract the properties from a PDF file and AttributesToJSON to convert the FlowFile attributes.</p>
+            <p><a href="recipes/2-2-load-pdf-as-binary-and-extracted-metadata-as-json.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="http-ingest"><a href="recipes/2-3-call-a-web-service.html">Call a Web Service</a></h2>
+            <p>This example introduces the GenerateFlowFile processor and demonstrates how to consume JSON data from a paged web service.</p>
+            <p><a href="">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="http-xml-ingest"><a href="recipes/2-3-1-augment-xml-content-with-data-from-a-web-service.html">Augment XML content with data from a Web Service</a></h2>
+            <p>The example introduces xhtml fragment ingestion</p>
+            <p><a href="recipes/2-3-1-augment-xml-content-with-data-from-a-web-service.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="custom-nifi-attributes"><a href="recipes/2-4-modify-nifi-attributes-with-custom-scripting.html">Modify NiFi Attributes with Custom Scripting</a></h2>
+            <p>This example introduces the ExecuteScript processor and demonstrates how to add an attribute with a Groovy script.</p>
+            <p><a href="recipes/2-4-modify-nifi-attributes-with-custom-scripting.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id=""><a href="recipes/2-5-get-files-by-ftp.html">Get Files by FTP</a></h2>
+            <p>This example uses the GetFTP processor to get a single file from an anonymous ftp server.</p>
+            <p><a href="recipes/2-5-get-files-by-ftp.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="text-from-docs"><a href="recipes/2-6-extract-text-from-pdfs-and-office-documents﻿.html">Extract Text from PDFs and Office Documents﻿</a></h2>
+            <p>This example uses the ExtractTextProcessor which is not included with NiFi but was developed by Hortonworks.</p>
+            <p><a href="recipes/2-6-extract-text-from-pdfs-and-office-documents﻿.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="rdb-ingest"><a href="recipes/2-7-get-data-from-a-relational-database.html">Get Data from a Relational Database</a></h2>
+            <p>This example demonstrates ingesting data from a relational database</p>
+            <p><a href="recipes/2-7-get-data-from-a-relational-database.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sql-table-fetch"><a href="recipes/2-7-1-create-view-use-generatetablefetch.html">Create View, use GenerateTableFetch</a></h2>
+            <p>Executes any query against a database. Does not support paging. Gets the entire resultset as a single Avro result that needs to be split.</p>
+            <p><a href="recipes/2-7-1-create-view-use-generatetablefetch.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sql-select"><a href="recipes/2-7-2-count-rows-construct-paged-sql-selects.html">Count Rows, Construct Paged SQL SELECTs</a></h2>
+            <p>Designed for paging. Executes a SELECT COUNT(*), then generates SQL queries to page over the rows of a table in chunks, but does not execute them.</p>
+            <p><a href="recipes/2-7-2-count-rows-construct-paged-sql-selects.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sql-query"><a href="recipes/2-7-3-execute-a-sql-query-for-a-nested-array.html">Use ExecuteSQLToColumnMaps</a></h2>
+            <p>Polls Custom Query for additional rows by storing and querying with an increasing column.</p>
+            <p><a href="recipes/2-7-3-execute-a-sql-query-for-a-nested-array.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sql-column-maps"><a href="recipes/2-7-4-use-executesqltocolumnmaps.html">Use ExecuteSQLToColumnMaps</a></h2>
+            <p>This example explores a MarkLogic Community alternative to the built-in SQL processors</p>
+            <p><a href="recipes/2-7-4-use-executesqltocolumnmaps.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sql-child-query"><a href="recipes/2-7-5-column-maps-with-child-query.html">Column Maps with Child Query</a></h2>
+            <p>This example explores using a child query to get column maps</p>
+            <p><a href="recipes/2-7-5-column-maps-with-child-query.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="mlcp-archive"><a href="recipes/2-8-loading-content-and-metadata-from-an-mlcp-archive-file.html">Load From an MLCP Archive</a></h2>
+            <p>This example explores loading content and metadata from an MLCP archive</p>
+            <p><a href="recipes/2-8-loading-content-and-metadata-from-an-mlcp-archive-file.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="load-triples"><a href="recipes/2-9-load-triples.html">Load Triples</a></h2>
+            <p>This example loads triples from any of the 7 supported RDF triple formats</p>
+            <p><a href="recipes/2-9-load-triples.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="json-transform"><a href="recipes/3-1-transform-json.html">Transform JSON</a></h2>
+            <p>This example demonstrates how to transform JSON with the built-in JoltTransformJSON processor</p>
+            <p><a href="recipes/3-1-transform-json.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="sharepoint-load"><a href="recipes/3-2-load-data-from-sharepoint.html">Load Data from SharePoint</a></h2>
+            <p>This example demonstrates how to load data from a SharePoint server</p>
+            <p><a href="recipes/3-2-load-data-from-sharepoint.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="html-transform"><a href="recipes/3-3-invoke-html-tidy-on-html-content.html">Invoke HTML Tidy on HTML Content</a></h2>
+            <p>This example demonstrates how to use HTML tidy to generate XHTML from HTML</p>
+            <p><a href="recipes/3-3-invoke-html-tidy-on-html-content.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="decrypt-csv"><a href="recipes/3-4-decrypt-input-csvs.html">Decrypt Input CSVs</a></h2>
+            <p>This example demonstrates how to convert and load CSV content</p>
+            <p><a href="recipes/3-4-decrypt-input-csvs.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="parquet-ingest"><a href="recipes/3-5-read-parquet-files.html">Read Parquet Files</a></h2>
+            <p><a href="recipes/3-5-read-parquet-files.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="filesystem-export"><a href="recipes/4-0-export-marklogic-database-content-to-the-file-system.html">Export MarkLogic Database Content to the File System</a></h2>
+            <p>This example uses the QueryMarkLogic processor to query a MarkLogic database, then writes the documents to the file system with the PutFile processor.</p>
+            <p><a href="recipes/4-0-export-marklogic-database-content-to-the-file-system.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="csv-export"><a href="recipes/4-1-read-marklogic-xml-write-to-csv.html">Read MarkLogic XML, Write to CSV</a></h2>
+            <p>This example uses the MarkLogic QueryBatchProcessor processor to read XML from a MarkLogic database, then writes certain element values to CSV.</p>
+            <p><a href="recipes/4-1-read-marklogic-xml-write-to-csv.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="kafka"><a href="recipes/4-2-kafka-integration.html">Kafka Integration</a></h2>
+            <p>This example demonstrates how to integrate Kafka, Nifi, and MarkLogic</p>
+            <p><a href="recipes/4-2-kafka-integration.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="error-nifi"><a href="recipes/5-0-error-handling-in-nifi-flows.html">Error Handling in NiFi Flows</a></h2>
+            <p>Many of the example flows presented in this cookbook have auto-terminated relationships that represent error conditions, such as "failure", "unmatched", etc. Here we demonstrate a few patterns for handling those errors.</p>
+            <p><a href="recipes/5-0-error-handling-in-nifi-flows.html">Read More</a></p>
+          </div>
+          <div>
+            <h2 id="error-marklogic"><a href="recipes/5-1-error-handling-in-putmarklogic.html">Error Handling in PutMarkLogic</a></h2>
+            <p>Here we discuss error handling in the PutMarkLogic processor</p>
+            <p><a href="recipes/5-1-error-handling-in-putmarklogic.html">Read More</a></p>
+          </div>
         </div>
       </div>
-    </div>
-  </article>
-  <footer class="site-footer">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          <p>
-            Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
-          </p>
+    </article>
+    <footer class="site-footer">
+      <div class="container">
+        <div class="row">
+          <div class="col-md-12">
+            <p>
+              Copyright © 2016-2019 MarkLogic Corporation. All Rights Reserved. MARKLOGIC® is a registered trademark of MarkLogic Corporation.
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  </footer>
-  <!--[if lt IE 9]>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
-  <script src="/nifi/js/respond.min.js"></script>
-  <![endif]-->
-  <script type="text/javascript" src="assets//bundle.js" id="1"></script>
-  <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-79716597-1', 'auto');
-  ga('send', 'pageview');
-  </script>
-</body>
+    </footer>
+    <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="/nifi/js/respond.min.js"></script>
+    <![endif]-->
+    <script type="text/javascript" src="assets//bundle.js" id="1"></script>
+    <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-79716597-1', 'auto');
+    ga('send', 'pageview');
+    </script>
+  </body>
 </html>
