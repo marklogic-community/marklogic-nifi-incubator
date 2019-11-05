@@ -50,6 +50,7 @@ import org.apache.nifi.processor.Relationship;
 import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.stream.io.StreamUtils;
+import org.json.JSONObject;
 
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
@@ -75,6 +76,7 @@ import com.marklogic.client.io.Format;
     expressionLanguageScope = ExpressionLanguageScope.VARIABLE_REGISTRY)
 @TriggerWhenEmpty
 @WritesAttribute(attribute = "URIs", description = "On batch_success, writes successful URIs as coma-separated list.")
+
 public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     class FlowFileInfo {
@@ -249,7 +251,10 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                     return item.getTargetUri();
                 }).collect(Collectors.joining(","));
                 FlowFile batchFlowFile = session.create();
+        	    JSONObject optionsJSONObj = new JSONObject();
+        	    optionsJSONObj.put("uris", uriList.split(","));        	    
                 session.putAttribute(batchFlowFile, "URIs", uriList);
+                session.putAttribute(batchFlowFile, "optionsJson", optionsJSONObj.toString());
                 synchronized(session) {
                     session.transfer(batchFlowFile, BATCH_SUCCESS);
                 }
