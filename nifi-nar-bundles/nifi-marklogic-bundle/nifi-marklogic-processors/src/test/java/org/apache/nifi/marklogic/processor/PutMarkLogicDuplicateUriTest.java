@@ -64,8 +64,7 @@ public class PutMarkLogicDuplicateUriTest extends AbstractMarkLogicProcessorTest
 		processor.onTrigger(processContext, mockProcessSessionFactory);
 
 		assertEquals("Should only be 3 uri in uriFlowFileMap", 3, TestDuplicatePutMarkLogic.uriFlowFileMap.size());
-		assertEquals("Should only be 0 uri in duplicateFlowFileMap", 0,
-				TestDuplicatePutMarkLogic.duplicateFlowFileMap.size());
+		assertEquals("Should only be 0 uri in duplicateFlowFileMap", 0,	TestDuplicatePutMarkLogic.duplicateFlowFileMap.size());
 		assertEquals(3, processor.writeEventsCount);
 		processor.onScheduled(processContext);
 	}
@@ -95,35 +94,7 @@ public class PutMarkLogicDuplicateUriTest extends AbstractMarkLogicProcessorTest
 				TestDuplicatePutMarkLogic.duplicateFlowFileMap.size());
 		assertEquals("The first flowFile UUID should be the currentFlowFileUUID ",
 				flowFile.getAttribute(CoreAttributes.UUID.key()), processor.lastUUID);
-		assertEquals(1, processor.writeEventsCount);
-		processor.onScheduled(processContext);
-	}
-
-	@Test
-	public void testDuplicateUriUseLatestHandling() {
-		processContext.setProperty(PutMarkLogic.DUPLICATE_URI_HANDLING, PutMarkLogic.USE_LATEST);
-		processContext.setProperty(PutMarkLogic.FORMAT, Format.JSON.name());
-		processContext.setProperty(PutMarkLogic.URI_ATTRIBUTE_NAME, "id");
-		processor.initialize(initializationContext);
-		processor.reset();
-		// Just use same id
-		Map<String, String> attributes = new HashMap<>();
-		attributes.put("id", "123456.json");
-		attributes.put("index", "1");
-		MockFlowFile flowFile1 = addFlowFile(attributes, "{\"hello\":\"nifi rocks\"}");
-		processor.onTrigger(processContext, mockProcessSessionFactory);
-		attributes.put("index", "2");
-		MockFlowFile flowFile2 = addFlowFile(attributes, "{\"hello\":\"nifi rocks\"}");
-		processor.onTrigger(processContext, mockProcessSessionFactory);
-		attributes.put("index", "3");
-		MockFlowFile flowFile3 = addFlowFile(attributes, "{\"hello\":\"nifi rocks\"}");
-		// The last superseded flow file is always the flowFile2
-		String lastFlowUUID = flowFile2.getAttribute(CoreAttributes.UUID.key());
-		processor.onTrigger(processContext, mockProcessSessionFactory);
-		assertEquals("Expected 3 Write Events", 3, processor.writeEventsCount);
-		assertEquals("Last Superseded Index should be 2", "2", processor.lastSupersededIndex);
-		assertEquals("The latest flowUUID should be equal to lastFlowFile", lastFlowUUID, processor.lastSupersededUUID);
-		assertEquals("The uriFlowFileMapSize should be 1", 1, TestDuplicatePutMarkLogic.uriFlowFileMap.size());
+		assertEquals("Should be only 1 writeEvent",1, processor.writeEventsCount);
 		processor.onScheduled(processContext);
 	}
 	@Test
@@ -147,7 +118,7 @@ public class PutMarkLogicDuplicateUriTest extends AbstractMarkLogicProcessorTest
 		// The last superseded flow file is always the flowFile2
 		String lastFlowUUID = flowFile2.getAttribute(CoreAttributes.UUID.key());
 		processor.onTrigger(processContext, mockProcessSessionFactory);
-		
+		assertEquals("CloseBatchWriter should be 2",2,processor.closeWriterBatcherCount);
 		//processor.onScheduled(processContext);
 	}
 }
@@ -158,11 +129,11 @@ public class PutMarkLogicDuplicateUriTest extends AbstractMarkLogicProcessorTest
  */
 
 class TestDuplicatePutMarkLogic extends PutMarkLogic {
-
 	public boolean flushAsyncCalled = false;
 	public WriteEvent writeEvent;
 	public int writeEventsCount = 0;
 	public int failedCount = 0;
+	public int closeWriterBatcherCount = 0;
 	public String lastSupersededIndex = "";
 	public String lastSupersededUUID = "";
 	public String lastUUID = "";
@@ -181,7 +152,6 @@ class TestDuplicatePutMarkLogic extends PutMarkLogic {
 		flushAsyncCalled = true;
 		writeEventsCount = 0;
 	}
-
 	@Override
 	protected void routeDocumentToRelationship(WriteEvent writeEvent, Relationship relationship) {
 		String relName = relationship.getName();
@@ -198,12 +168,14 @@ class TestDuplicatePutMarkLogic extends PutMarkLogic {
 
 	@Override
 	protected void addWriteEvent(WriteBatcher writeBatcher, WriteEvent writeEvent) {
-
 		DocumentMetadataHandle metadata = (DocumentMetadataHandle) writeEvent.getMetadata();
 		lastUUID = metadata.getMetadataValues().get("flowFileUUID");
 		this.writeEvent = writeEvent;
 		writeEventsCount++;
 		getLogger().info("Writing URI:" + writeEvent.getTargetUri() + ",flowfileaUUID:"+lastUUID);
 	}
-
+	@Override 
+	protected void closeWriteBatcher() {
+		closeWriterBatcherCount++;
+	}
 }

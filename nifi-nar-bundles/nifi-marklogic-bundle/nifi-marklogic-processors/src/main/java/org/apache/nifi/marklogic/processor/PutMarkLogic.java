@@ -226,16 +226,17 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             "failure relationship for future processing.")
         .build();
     
-    protected static final Relationship FAILED_URI = new Relationship.Builder()
-    	.name("duplicate_uri_failure")
-    	.description("Routes a duplicate uri flow file based on the [FAILED_URI] strategy")
+    protected static final Relationship DUPLICATE_URI = new Relationship.Builder()
+    	.name("duplicate_uri")
+    	.description("A flowFile that resulted in a DUPLICATE_URI")
     	.build();
     
+    /*
     protected static final Relationship SUPERSEDED_URI = new Relationship.Builder()
     	.name("supersedes")
     	.description("Routes a duplicate uri as superseded based on the [USE_LATEST] strategy")
     	.build();
-    
+    */
     private volatile DataMovementManager dataMovementManager;
     protected volatile WriteBatcher writeBatcher;
     // If no FlowFile exists when this processor is triggered, this variable determines whether or not a call is made to
@@ -266,13 +267,14 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         set.add(BATCH_SUCCESS);
         set.add(SUCCESS);
         set.add(FAILURE);
-        set.add(FAILED_URI);
-        set.add(SUPERSEDED_URI);
+        set.add(DUPLICATE_URI);
+        //set.add(SUPERSEDED_URI);
         relationships = Collections.unmodifiableSet(set);
     }
 
     @OnScheduled
     public void onScheduled(ProcessContext context) {
+    	getLogger().info("OnScheduled");
         super.populatePropertiesByPrefix(context);
         dataMovementManager = getDatabaseClient(context).newDataMovementManager();
         writeBatcher = dataMovementManager.newWriteBatcher()
@@ -305,16 +307,14 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 }
                 for(WriteEvent writeEvent : writeBatch.getItems()) {
                     routeDocumentToRelationship(writeEvent, SUCCESS);
+                    duplicateFlowFileMap.remove(writeEvent.getTargetUri());
                 }
-                //Clear the duplicates
-                duplicateFlowFileMap.clear();
             }
         }).onBatchFailure((writeBatch, throwable) -> {
             for(WriteEvent writeEvent : writeBatch.getItems()) {
                 routeDocumentToRelationship(writeEvent, FAILURE);
+                duplicateFlowFileMap.remove(writeEvent.getTargetUri());
             }
-            //Clear the duplicates
-            duplicateFlowFileMap.clear();
         });
         dataMovementManager.startJob(writeBatcher);
     }
@@ -385,9 +385,9 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 case FAIL_URI:
                 	//Quick Fail the routeDocumentToRelationship will cleanup entry
                 	if(previousUUID != null && previousUUID != currentUUID) {
-                    	getLogger().info("Routing to FAIL_URI:" + currentUUID);
-                    	session.putAttribute(flowFile, FAILED_UUID_PROPERTY, previousUUID);
-                		routeDocumentToRelationship(writeEvent,FAILED_URI);                	
+                    	getLogger().debug("Routing to FAIL_URI:" + currentUUID);
+                    	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                		routeDocumentToRelationship(writeEvent,DUPLICATE_URI);                	
 
                 	} else {
                     	//Now just add new WriteEvent
@@ -396,29 +396,14 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                     	duplicateFlowFileMap.put(currentUrl,currentUUID);
                 	}
                 	break;
-                case USE_LATEST :  
-                	//Remove the old FlowFile and route it to superseded relationship
-                	//Update the flowfile attributes to denote which UUID it was superseded by
-                	if(previousUUID != null) {
-	                	FlowFileInfo previousFlowFileInfo = uriFlowFileMap.get(previousUUID);
-	                	if(previousFlowFileInfo != null) {
-		                	WriteEvent previousWriteEvent = previousFlowFileInfo.writeEvent;
-		                	previousFlowFileInfo.session.putAttribute(previousFlowFileInfo.flowFile,SUPERSEDED_UUID_PROPERTY,currentUUID);
-		                	this.routeDocumentToRelationship(previousWriteEvent,SUPERSEDED_URI);
-		                	//uriFlowFileMap.remove(previousUUID);
-	                	}
-	                	
-                	}
-                	//Now just add new WriteEvent
-                	addWriteEvent(this.writeBatcher,writeEvent);
-                	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
-                	duplicateFlowFileMap.put(currentUrl,currentUUID);
-                	break;
                 case CLOSE_BATCH :
-                	//Close batch is a bit trickier, we can flush but how to handle next
-                	onScheduled(context);
+                	if(previousUUID != null) {
+                		getLogger().info("Closing Batch ... Duplicate Uri:" + writeEvent.getTargetUri());
+                		this.closeWriteBatcher();
+                	} 	
                 	addWriteEvent(this.writeBatcher, writeEvent);
                 	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                    duplicateFlowFileMap.put(currentUrl,currentUUID);
                 	break;
                 }
                 if (getLogger().isDebugEnabled()) {
@@ -471,10 +456,6 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         if (mimetype != null) {
             handle.withMimetype(mimetype);
         }
-        
-        //This should function should not do this here moving up onTrigger where it belongs.(Side Effect Free)
-        //String flowFileUUID = flowFile.getAttribute(CoreAttributes.UUID.key());
-        //uriFlowFileMap.put(flowFileUUID, new FlowFileInfo(flowFile, session));
         
         return new WriteEventImpl()
             .withTargetUri(uri)
@@ -558,7 +539,14 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
             }
         }
     }
-
+    /*
+     * Closes the batch and force sync likely due to Duplicate URI detected
+     */
+    protected void closeWriteBatcher() {
+    	if(writeBatcher != null) {
+    		writeBatcher.flushAndWait();
+    	}
+    }
     @OnShutdown
     @OnStopped
     public void completeWriteBatcherJob() {
