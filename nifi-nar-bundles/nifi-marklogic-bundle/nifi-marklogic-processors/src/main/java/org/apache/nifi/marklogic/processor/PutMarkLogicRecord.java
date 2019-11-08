@@ -199,7 +199,9 @@ public class PutMarkLogicRecord extends PutMarkLogic {
                     BytesHandle bytesHandle = new BytesHandle().with(baos.toByteArray());
                     final String uriKey = uriFieldName == null ? UUID.randomUUID().toString() : record.getAsString(uriFieldName);
                     WriteEvent writeEvent = buildWriteEvent(context, session, flowFile, uriKey, bytesHandle, additionalAttributes);
+                    uriFlowFileMap.put(uriKey, new FlowFileInfo(flowFile, session,writeEvent));
                     this.addWriteEvent(writeBatcher, writeEvent);
+                    
                     added++;
                 }
             }
@@ -273,7 +275,7 @@ public class PutMarkLogicRecord extends PutMarkLogic {
             contentHandle.withMimetype(mimetype);
         }
 
-        uriFlowFileMap.put(flowFileUUID, new FlowFileInfo(flowFile, session));
+        //uriFlowFileMap.put(flowFileUUID, new FlowFileInfo(flowFile, session,writeEvent));
         return new WriteEventImpl()
             .withTargetUri(uri)
             .withMetadata(metadata)
