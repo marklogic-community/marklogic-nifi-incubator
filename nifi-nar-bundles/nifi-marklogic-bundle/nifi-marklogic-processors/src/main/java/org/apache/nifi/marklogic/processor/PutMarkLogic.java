@@ -99,12 +99,12 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
     
     //Duplicate URI Handling Properties
     public static final String IGNORE      = "IGNORE";
-	public static final String FAIL_URI  = "FAIL_URI";
-	public static final String CLOSE_BATCH = "CLOSE_BATCH";
-	protected static final AllowableValue DUPLICATE_IGNORE = new AllowableValue(IGNORE, IGNORE, "Does not handle duplicate uris");
-	protected static final AllowableValue DUPLICATE_FAIL_URI = new AllowableValue(FAIL_URI, FAIL_URI, "Routes a duplicate FlowFile like taking first flow file with targetUri (FIFO)");
-	protected static final AllowableValue DUPLICATE_CLOSE_BATCH = new AllowableValue(CLOSE_BATCH,CLOSE_BATCH,"Attempts to close the current batch, before inserting duplicate flowFile");
-	
+    public static final String FAIL_URI  = "FAIL_URI";
+    public static final String CLOSE_BATCH = "CLOSE_BATCH";
+    protected static final AllowableValue DUPLICATE_IGNORE = new AllowableValue(IGNORE, IGNORE, "Does not handle duplicate uris");
+    protected static final AllowableValue DUPLICATE_FAIL_URI = new AllowableValue(FAIL_URI, FAIL_URI, "Routes a duplicate FlowFile like taking first flow file with targetUri (FIFO)");
+    protected static final AllowableValue DUPLICATE_CLOSE_BATCH = new AllowableValue(CLOSE_BATCH,CLOSE_BATCH,"Attempts to close the current batch, before inserting duplicate flowFile");
+    
     public static final PropertyDescriptor COLLECTIONS = new PropertyDescriptor.Builder()
         .name("Collections")
         .displayName("Collections")
@@ -196,13 +196,13 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .build();
     
     public static final PropertyDescriptor DUPLICATE_URI_HANDLING = new PropertyDescriptor.Builder()
-    	.name("Duplicate URI Handling")
-    	.displayName("Duplicate Uri Handling")
-    	.description("Strategy used for multiple docuuments with same URI")
-    	.required(false)
-    	.allowableValues(DUPLICATE_IGNORE,DUPLICATE_FAIL_URI,DUPLICATE_CLOSE_BATCH)
-    	.defaultValue(DUPLICATE_IGNORE.getValue())
-    	.build();
+        .name("Duplicate URI Handling")
+        .displayName("Duplicate Uri Handling")
+        .description("Strategy used for multiple docuuments with same URI")
+        .required(false)
+        .allowableValues(DUPLICATE_IGNORE,DUPLICATE_FAIL_URI,DUPLICATE_CLOSE_BATCH)
+        .defaultValue(DUPLICATE_IGNORE.getValue())
+        .build();
     
     protected static final Relationship BATCH_SUCCESS = new Relationship.Builder()
         .name("batch_success")
@@ -222,15 +222,15 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .build();
     
     protected static final Relationship DUPLICATE_URI = new Relationship.Builder()
-    	.name("duplicate_uri")
-    	.description("A flowFile that resulted in a DUPLICATE_URI used in FAIL_URI Duplicate Uri Handling")
-    	.build();
+        .name("duplicate_uri")
+        .description("A flowFile that resulted in a DUPLICATE_URI used in FAIL_URI Duplicate Uri Handling")
+        .build();
     
     /*
     protected static final Relationship SUPERSEDED_URI = new Relationship.Builder()
-    	.name("supersedes")
-    	.description("Routes a duplicate uri as superseded based on the [USE_LATEST] strategy")
-    	.build();
+        .name("supersedes")
+        .description("Routes a duplicate uri as superseded based on the [USE_LATEST] strategy")
+        .build();
     */
     private volatile DataMovementManager dataMovementManager;
     protected volatile WriteBatcher writeBatcher;
@@ -269,7 +269,7 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
     @OnScheduled
     public void onScheduled(ProcessContext context) {
-    	getLogger().info("OnScheduled");
+        getLogger().info("OnScheduled");
         super.populatePropertiesByPrefix(context);
         dataMovementManager = getDatabaseClient(context).newDataMovementManager();
         writeBatcher = dataMovementManager.newWriteBatcher()
@@ -373,34 +373,34 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 //Looks like the best place to detect duplicates and handle action because we have access to computed url by this point,
                 switch(duplicateHandler) {
                 case IGNORE :
-                	//Just write the event knowing it will fail during batch write process
-                	addWriteEvent(this.writeBatcher, writeEvent);
-                	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
-                	break;
+                    //Just write the event knowing it will fail during batch write process
+                    addWriteEvent(this.writeBatcher, writeEvent);
+                    uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                    break;
                 case FAIL_URI:
-                	//Quick Fail the routeDocumentToRelationship will cleanup entry
-                	if(previousUUID != null && previousUUID != currentUUID) {
-                    	getLogger().debug("Routing to FAIL_URI:" + currentUUID);
-                    	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
-                		routeDocumentToRelationship(writeEvent,DUPLICATE_URI);                	
+                    //Quick Fail the routeDocumentToRelationship will cleanup entry
+                    if(previousUUID != null && previousUUID != currentUUID) {
+                        getLogger().debug("Routing to FAIL_URI:" + currentUUID);
+                        uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                        routeDocumentToRelationship(writeEvent,DUPLICATE_URI);                    
 
-                	} else {
-                    	//Now just add new WriteEvent
-                    	addWriteEvent(this.writeBatcher,writeEvent);
-                    	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
-                    	duplicateFlowFileMap.put(currentUrl,currentUUID);
-                	}
-                	break;
+                    } else {
+                        //Now just add new WriteEvent
+                        addWriteEvent(this.writeBatcher,writeEvent);
+                        uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                        duplicateFlowFileMap.put(currentUrl,currentUUID);
+                    }
+                    break;
 
                 case CLOSE_BATCH :
-                	if(previousUUID != null) {
-                		getLogger().info("Closing Batch ... Duplicate Detected for uri:" + writeEvent.getTargetUri());
-                		this.closeWriteBatcher();
-                	} 	
-                	addWriteEvent(this.writeBatcher, writeEvent);
-                	uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                    if(previousUUID != null) {
+                        getLogger().info("Closing Batch ... Duplicate Detected for uri:" + writeEvent.getTargetUri());
+                            this.closeWriteBatcher();
+                    } 
+                    addWriteEvent(this.writeBatcher, writeEvent);
+                    uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
                     duplicateFlowFileMap.put(currentUrl,currentUUID);
-                	break;
+                    break;
                 }
                 if (getLogger().isDebugEnabled()) {
                     getLogger().debug("Writing URI: " + writeEvent.getTargetUri());
@@ -539,9 +539,9 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
      * Closes the batch likely due to Duplicate URI detected
      * */
     protected void closeWriteBatcher() {
-    	if(writeBatcher != null) {
-    		writeBatcher.flushAndWait();
-    	}
+        if(writeBatcher != null) {
+            writeBatcher.flushAndWait();
+        }
     }
     @OnShutdown
     @OnStopped
