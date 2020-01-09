@@ -226,12 +226,6 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
         .description("A flowFile that resulted in a DUPLICATE_URI used in FAIL_URI Duplicate Uri Handling")
         .build();
     
-    /*
-    protected static final Relationship SUPERSEDED_URI = new Relationship.Builder()
-        .name("supersedes")
-        .description("Routes a duplicate uri as superseded based on the [USE_LATEST] strategy")
-        .build();
-    */
     private volatile DataMovementManager dataMovementManager;
     protected volatile WriteBatcher writeBatcher;
     // If no FlowFile exists when this processor is triggered, this variable determines whether or not a call is made to
