@@ -51,7 +51,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
@@ -76,7 +76,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
@@ -97,7 +97,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
@@ -118,7 +118,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
@@ -145,7 +145,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
@@ -166,7 +166,7 @@ public class PutMarkLogicTest extends AbstractMarkLogicProcessorTest {
 
         processor.onTrigger(processContext, mockProcessSessionFactory);
 
-        assertEquals(3, processor.relationships.size());
+        assertEquals(4, processor.relationships.size());
         assertFalse("flushAsync should not have been called yet since a FlowFile existed in the session", processor.flushAsyncCalled);
 
         BytesHandle content = (BytesHandle) processor.writeEvent.getContent();
