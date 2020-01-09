@@ -374,8 +374,8 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                 switch(duplicateHandler) {
                 case IGNORE :
                     //Just write the event knowing it will fail during batch write process
-                    addWriteEvent(this.writeBatcher, writeEvent);
                     uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
+                    addWriteEvent(this.writeBatcher, writeEvent);
                     break;
                 case FAIL_URI:
                     //Quick Fail the routeDocumentToRelationship will cleanup entry
@@ -386,9 +386,9 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
 
                     } else {
                         //Now just add new WriteEvent
-                        addWriteEvent(this.writeBatcher,writeEvent);
                         uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
                         duplicateFlowFileMap.put(currentUrl,currentUUID);
+                        addWriteEvent(this.writeBatcher,writeEvent);
                     }
                     break;
 
@@ -397,9 +397,9 @@ public class PutMarkLogic extends AbstractMarkLogicProcessor {
                         getLogger().info("Closing Batch ... Duplicate Detected for uri:" + writeEvent.getTargetUri());
                             this.closeWriteBatcher();
                     } 
-                    addWriteEvent(this.writeBatcher, writeEvent);
                     uriFlowFileMap.put(currentUUID, new FlowFileInfo(flowFile, session,writeEvent));
                     duplicateFlowFileMap.put(currentUrl,currentUUID);
+                    addWriteEvent(this.writeBatcher, writeEvent);
                     break;
                 }
                 if (getLogger().isDebugEnabled()) {
