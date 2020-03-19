@@ -61,7 +61,6 @@ public class AbstractMarkLogicProcessorTest extends Assert {
 
         try {
             runner.addControllerService(databaseClientServiceIdentifier, service);
-            processContext.addControllerService(service,databaseClientServiceIdentifier);
             
         } catch (InitializationException e) {
             throw new RuntimeException(e);
@@ -71,8 +70,6 @@ public class AbstractMarkLogicProcessorTest extends Assert {
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.PORT, testConfig.getRestPort().toString());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.USERNAME, testConfig.getUsername());
         runner.setProperty(service, DefaultMarkLogicDatabaseClientService.PASSWORD, testConfig.getPassword());
-        configureDatabaseClientService();
-        processContext.setProperty(PutMarkLogicRecord.DATABASE_CLIENT_SERVICE, databaseClientServiceIdentifier);
     }
 
     /**
