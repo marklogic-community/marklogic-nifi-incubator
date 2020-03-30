@@ -89,7 +89,9 @@ public class ProvenanceTransformerTest extends AbstractProvenanceTest {
         assertEquals("1 Transformed to Turtle format", 1, result.size());
         result.get(0).assertAttributeEquals("mime.extension", ".ttl");
         result.get(0).assertAttributeEquals("mime.type", "application/x-turtle");
-        result.get(0).assertContentEquals(readFileAsString("expected-output/expected-output.ttl"));
+        String text = readFileAsString("expected-output/expected-output.ttl");
+        text = text.replace("\n", System.getProperty("line.separator"));
+        result.get(0).assertContentEquals(text);
 
     }
 
@@ -120,7 +122,9 @@ public class ProvenanceTransformerTest extends AbstractProvenanceTest {
         assertEquals("1 Transformed to Turtle format", 1, result.size());
         result.get(0).assertAttributeEquals("mime.extension", ".nt");
         result.get(0).assertAttributeEquals("mime.type", "application/n-triples");
-        result.get(0).assertContentEquals(readFileAsString("expected-output/expected-output.nt"));
+        String text = readFileAsString("expected-output/expected-output.nt");
+        text = text.replace("\n", System.getProperty("line.separator"));
+        result.get(0).assertContentEquals(text);
     }
 
 }
