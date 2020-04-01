@@ -26,6 +26,7 @@ import org.apache.nifi.controller.AbstractControllerService;
 import org.apache.nifi.controller.ControllerService;
 import org.apache.nifi.flowfile.FlowFile;
 import org.apache.nifi.logging.ComponentLog;
+import org.apache.nifi.marklogic.processor.ExecuteScriptMarkLogicTest.TestExecuteScriptMarkLogic;
 import org.apache.nifi.reporting.InitializationException;
 import org.apache.nifi.serialization.RecordReader;
 import org.apache.nifi.serialization.RecordReaderFactory;
@@ -49,6 +50,7 @@ public class PutMarkLogicRecordTest extends AbstractMarkLogicProcessorTest {
     public void setup() throws InitializationException {
         processor = new TestPutMarkLogicRecord();
         initialize(processor);
+        runner.setProperty(TestExecuteScriptMarkLogic.DATABASE_CLIENT_SERVICE, databaseClientServiceIdentifier);
         recordReader = new MockRecordParser();
         recordReader.addSchemaField("docID", RecordFieldType.STRING);
         recordWriter = new MockRecordWriter("\"docID\"");

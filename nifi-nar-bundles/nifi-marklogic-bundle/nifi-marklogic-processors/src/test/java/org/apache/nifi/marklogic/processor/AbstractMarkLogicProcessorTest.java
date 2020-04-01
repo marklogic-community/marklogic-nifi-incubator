@@ -16,6 +16,8 @@
  */
 package org.apache.nifi.marklogic.processor;
 
+import org.apache.nifi.components.PropertyDescriptor;
+import org.apache.nifi.components.PropertyValue;
 import org.apache.nifi.marklogic.controller.DefaultMarkLogicDatabaseClientService;
 import org.apache.nifi.marklogic.controller.MarkLogicDatabaseClientService;
 import org.apache.nifi.processor.ProcessSession;
@@ -59,6 +61,7 @@ public class AbstractMarkLogicProcessorTest extends Assert {
 
         try {
             runner.addControllerService(databaseClientServiceIdentifier, service);
+            
         } catch (InitializationException e) {
             throw new RuntimeException(e);
         }
@@ -76,9 +79,7 @@ public class AbstractMarkLogicProcessorTest extends Assert {
     protected void configureDatabaseClientService() {
         runner.enableControllerService(service);
         runner.assertValid(service);
-        runner.setProperty(PutMarkLogicRecord.DATABASE_CLIENT_SERVICE, databaseClientServiceIdentifier);
     }
-
     protected MockFlowFile addTestFlowFile() {
         return addFlowFile("<test/>");
     }

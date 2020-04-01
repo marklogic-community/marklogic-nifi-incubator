@@ -24,17 +24,17 @@
     </parent>
 
 
-    <version>1.9.1.1-incubator</version>
+    <version>1.9.1.2-incubator</version>
 
     <artifactId>nifi-marklogic-bundle</artifactId>
     <packaging>pom</packaging>
 
     <properties>
         <nifi.version>1.9.1</nifi.version>
-        <marklogicnar.version>1.9.1.1-incubator</marklogicnar.version>
+        <marklogicnar.version>1.9.1.2-incubator</marklogicnar.version>
         <marklogicclientapi.version>4.2.0</marklogicclientapi.version>
-        <mljavaclientutil.version>3.12.0</mljavaclientutil.version>
-        <marklogicdatamovementcomponents.version>1.0</marklogicdatamovementcomponents.version>
+        <mljavaclientutil.version>3.14.0</mljavaclientutil.version>
+        <marklogicdatamovementcomponents.version>1.2</marklogicdatamovementcomponents.version>
     </properties>
 
     <modules>
