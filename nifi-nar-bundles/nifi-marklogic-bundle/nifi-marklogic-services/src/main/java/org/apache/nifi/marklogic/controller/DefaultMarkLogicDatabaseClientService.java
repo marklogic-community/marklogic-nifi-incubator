@@ -54,6 +54,8 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
     private static List<PropertyDescriptor> properties;
 
     private DatabaseClient databaseClient;
+    private DatabaseClientConfig databaseClientConfig;
+
     public static final PropertyDescriptor HOST = new PropertyDescriptor.Builder()
         .name("Host")
         .displayName("Host")
@@ -164,8 +166,8 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
     @OnEnabled
     public void onEnabled(ConfigurationContext context) {
         getLogger().info("Creating DatabaseClient");
-        DatabaseClientConfig config = buildDatabaseClientConfig(context);
-        databaseClient = new DefaultConfiguredDatabaseClientFactory().newDatabaseClient(config);
+        databaseClientConfig = buildDatabaseClientConfig(context);
+        databaseClient = new DefaultConfiguredDatabaseClientFactory().newDatabaseClient(databaseClientConfig);
     }
 
     @OnDisabled
@@ -233,6 +235,11 @@ public class DefaultMarkLogicDatabaseClientService extends AbstractControllerSer
 	@Override
     public DatabaseClient getDatabaseClient() {
         return databaseClient;
+    }
+
+    @Override
+    public DatabaseClientConfig getDatabaseClientConfig() {
+        return databaseClientConfig;
     }
 
     @Override
