@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -330,10 +331,13 @@ public class QueryMarkLogicIT extends AbstractMarkLogicIT {
     @Test
     public void testStructuredXMLQuery() throws InitializationException, SAXException, IOException, ParserConfigurationException {
         TestRunner runner = getNewTestRunner(QueryMarkLogic.class);
+        Map<String,String> attributes = new HashMap<>();
+        attributes.put("word", "xmlcontent");
+        runner.enqueue("".getBytes(), attributes);
         runner.setProperty(QueryMarkLogic.QUERY, "<query xmlns=\"http://marklogic.com/appservices/search\">\n" +
                 "  <word-query>\n" +
                 "    <element name=\"sample\" ns=\"\" />\n" +
-                "    <text>xmlcontent</text>\n" +
+                "    <text>${word}</text>\n" +
                 "  </word-query>\n" +
                 "</query>");
         runner.setProperty(QueryMarkLogic.QUERY_TYPE, QueryMarkLogic.QueryTypes.STRUCTURED_XML);
