@@ -1,3 +1,7 @@
+# EOL Notice
+
+Please note that this community-based project is no longer active. Improvements made to the connector in this project have been incorporated back into the MarkLogic NiFi repository (https://github.com/marklogic/nifi), so visit that repository for the most recent updates and improvements.
+
 # MarkLogic NiFi Incubator
 
 * This incubator has new processors, community recipes, and some fixes or extensions to core MarkLogic processors.
